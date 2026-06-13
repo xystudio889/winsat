@@ -8,9 +8,9 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="31381ae9-c8bb-43b1-9af0-a11a691946af"
+    Name="xystudio.winsat"
     Publisher="CN=X1/admin"
-    Version="1.0.2.0" />
+    Version="1.0.3.0" />
 
   <mp:PhoneIdentity PhoneProductId="31381ae9-c8bb-43b1-9af0-a11a691946af" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

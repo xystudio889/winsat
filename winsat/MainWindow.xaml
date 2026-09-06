@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Window
     x:Class="winsat.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -9,46 +9,69 @@
     mc:Ignorable="d"
     Title="winsat"
     >
-
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
-
-    <Grid>
+    <Grid
+        x:Name="RootGrid"
+    >
         <Grid.RowDefinitions>
-            <!-- Title Bar -->
             <RowDefinition Height="Auto" />
-            <!-- App Content -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TitleBar x:Name="AppTitleBar"
-            Title="WinSAT 跑分工具"
+        <TitleBar
+            x:Name="titleBar"
+            Title="Windows 跑分工具"
+            IsPaneToggleButtonVisible="True"
+            PaneToggleRequested="TitleBar_PaneToggleRequested"
+            Height="48"
         >
             <TitleBar.IconSource>
-                <FontIconSource Glyph="&#xE770;"/>
+                <FontIconSource Glyph="&#xE770;" />
             </TitleBar.IconSource>
         </TitleBar>
-        <Grid Grid.Row="1">
-            <!-- 主内容 -->
-            <StackPanel Grid.Row="1" Orientation="Horizontal">
-                <StackPanel Grid.Row="1" Orientation="Vertical">
-                    <TextBlock Grid.Row="1" FontSize="30" FontWeight="Bold" Text="WinSAT 跑分工具" Margin="10 2 0 0" />
-                    <TextBlock Grid.Row="1" Text="CPU分数：无" Margin="10 2 0 0" x:Name="CPUScore" />
-                    <TextBlock Grid.Row="1" Text="Direct3D分数：无" Margin="10 2 0 0" x:Name="D3DScore" />
-                    <TextBlock Grid.Row="1" Text="硬盘分数：无" Margin="10 2 0 0" x:Name="DiskScore" />
-                    <TextBlock Grid.Row="1" Text="图形分数：无" Margin="10 2 0 0" x:Name="GraphicsScore" />
-                    <TextBlock Grid.Row="1" Text="内存分数：无" Margin="10 2 0 0" x:Name="MemoryScore" />
-                    <TextBlock Grid.Row="1" Text="评估状态：无" Margin="10 2 0 0" x:Name="WinSATAssessmentState" />
 
-                    <TextBlock Grid.Row="1" Text="总分(最小值)：无" Margin="10 20 0 0" x:Name="WinSPRLevel" FontSize="15" FontWeight="Bold" />
-                    <Button Style="{StaticResource AccentButtonStyle}" Content="开始跑分" Margin="10 5 0 0" Click="RunGetScore"></Button>
-                </StackPanel>
-                <StackPanel Grid.Row="1" Orientation="Vertical">
-                    <Button Content="调试：显示窗口尺寸" Visibility="Collapsed" Click="Debug_WindowSize"></Button>
-                </StackPanel>
-            </StackPanel>
-        </Grid>
-        <!-- App content -->
-        <Frame x:Name="rootFrame" Grid.Row="1"/>
+        <NavigationView
+            x:Name="NavigationViewControl"
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="False"
+            IsTabStop="False"
+            SelectionChanged="OnNavigationViewSelectionChanged">
+            <ScrollViewer
+                VerticalScrollBarVisibility="Visible"
+                HorizontalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Disabled">
+                    <Frame
+                    x:Name="rootFrame"
+                />
+            </ScrollViewer>
+            <NavigationView.MenuItems>
+                <NavigationViewItem
+                    Tag="Home"
+                    Content="主页"
+                    Icon="Home" />
+                <NavigationViewItem
+                    Tag="Advanced"
+                    Content="高级"
+                >
+                    <NavigationViewItem.Icon>
+                        <!-- 指定字体和对应的 Unicode 字符 -->
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74C;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem
+                    x:Name="DebugNavigation"
+                    Visibility="Collapsed"
+                    Tag="Debug"
+                    Content="调试"
+                >
+                    <NavigationViewItem.Icon>
+                        <!-- 指定字体和对应的 Unicode 字符 -->
+                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xEC7A;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+        </NavigationView>
     </Grid>
 </Window>

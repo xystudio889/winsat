@@ -1,24 +1,7 @@
-using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using WinRT.Interop; // ”√”⁄ WindowNative
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,107 +10,72 @@ namespace winsat
 {
     public sealed partial class MainWindow : Window
     {
-        public static List<string> RunPwsh(string command)
-        {
-            var results = new List<string>();
-            var psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe", // ªÚ "pwsh.exe"
-                Arguments = $"-NoProfile -NonInteractive -Command \"{command}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using (var p = Process.Start(psi)!)
-            {
-                string? line;
-                while ((line = p.StandardOutput.ReadLine()) != null)
-                {
-                    results.Add(line);
-                }
-
-                string err = p.StandardError.ReadToEnd();
-                if (!string.IsNullOrEmpty(err))
-                {
-                    // ¥¶¿ÌªÚº«¬º¥ÌŒÛ
-                    results.Add("[ERROR] " + err);
-                }
-
-                p.WaitForExit();
-            }
-
-            return results;
-        }
-
         public MainWindow()
         {
-            InitializeComponent(); // ≥ı ºªØ
-
-            this.AppWindow.Resize(new Windows.Graphics.SizeInt32(300, 300)); // µ˜’˚¥Û–°
-
-            ExtendsContentIntoTitleBar = true; // πÃ∂®±ÍÃ‚¿∏
-
-            SetTitleBar(AppTitleBar); // ”¶”√±ÍÃ‚¿∏
+            this.InitializeComponent();
+            SetWindowProperties();
         }
 
-        public async void RunGetScore(object sender, RoutedEventArgs e)
+        private void SetWindowProperties()
         {
-            List<string> scores = RunPwsh("Get-CimInstance Win32_WinSAT");
-            List<string> score_list = [];
-            string status = "";
+            NavigationViewControl.IsPaneOpen = false;
+            this.ExtendsContentIntoTitleBar = true;
+            this.SetTitleBar(titleBar);
+            this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+            rootFrame.Navigate(typeof(HomePage));
 
-            foreach (string result in scores)
+#if DEBUG
+            this.Title = "Windows Ë∑ëÂàÜÂ∑•ÂÖ∑ ÊµãËØïÁâà";
+            titleBar.Subtitle = "ÊµãËØïÁâà";
+            DebugNavigation.Visibility = Visibility.Visible;
+#else
+            this.Title = "Windows Ë∑ëÂàÜÂ∑•ÂÖ∑";
+            DebugNavigation.Visibility = Visibility.Collapsed;
+#endif
+        }
+
+        private void OnNavigationViewSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            if (args.IsSettingsSelected)
             {
-                try
+                if (rootFrame.CurrentSourcePageType != typeof(SettingsPage))
                 {
-                    score_list.Add(result.Split(':')[1].Trim());
+                    rootFrame.Navigate(typeof(SettingsPage));
                 }
-                catch (Exception) {continue;}
             }
-
-            switch(score_list[6])
+            else if (args.SelectedItem is NavigationViewItem item)
             {
-                case "0":
-                    status = "Œ¥÷™";
-                    break;
-                case "1":
-                    status = "≥…π¶";
-                    break;
-                case "2":
-                    status = "”≤º˛±‰∂Ø";
-                    break;
-                case "3":
-                    status = "≤ªø…”√";
-                    break;
-                case "4":
-                    status = "Œﬁœﬁ";
-                    break;
-                default:
-                    status = score_list[6];
-                    break;
+                string tag = item.Tag as string;
+                switch (tag)
+                {
+                    case "Home":
+                        rootFrame.Navigate(typeof(HomePage));
+                        break;
+                    case "Advanced":
+                        rootFrame.Navigate(typeof(AdvancedPage));
+                        break;
+                    case "Debug":
+                        rootFrame.Navigate(typeof(DebugPage));
+                        break;
+                }
             }
+        }
 
-            CPUScore.Text = "CPU∑÷ ˝£∫" + score_list[0];
-            D3DScore.Text = "Direct3D∑÷ ˝£∫" + score_list[1];
-            DiskScore.Text = "¥≈≈Ã∑÷ ˝£∫" + score_list[2];
-            GraphicsScore.Text = "Õº–Œ∑÷ ˝£∫" + score_list[3];
-            MemoryScore.Text = "ƒ⁄¥Ê∑÷ ˝£∫" + score_list[4];
-            WinSATAssessmentState.Text = "∆¿π¿◊¥Ã¨£∫" + status;
-            WinSPRLevel.Text = "◊‹∑÷£∫" + score_list[7];
+        private void TitleBar_PaneToggleRequested(TitleBar sender, object args)
+        {
+            NavigationViewControl.IsPaneOpen = !NavigationViewControl.IsPaneOpen;
         }
 
         public async void Debug_WindowSize(object sender, RoutedEventArgs e)
         {
-            ContentDialog dialog = new ContentDialog() // µØ¥∞
+            ContentDialog dialog = new ContentDialog() // ÂºπÁ™ó
             {
-                Title = "µ˜ ‘£∫¥∞ø⁄¥Û–°",
-                Content = "µ±«∞¥∞ø⁄¥Û–°£∫" + this.AppWindow.Size.Width + "," + this.AppWindow.Size.Height,
-                PrimaryButtonText = "»∑∂®",
+                Title = "Ë∞ÉËØïÔºöÁ™óÂè£Â§ßÂ∞è",
+                Content = "ÂΩìÂâçÁ™óÂè£Â§ßÂ∞èÔºö" + this.AppWindow.Size.Width + "," + this.AppWindow.Size.Height,
+                PrimaryButtonText = "Á°ÆÂÆö",
                 XamlRoot = this.Content.XamlRoot
             };
             await dialog.ShowAsync();
         }
     }
-};
+}

@@ -1,9 +1,7 @@
 {
   "profiles": {
     "winsat (Package)": {
-      "commandName": "MsixPackage",
-      "allowLocalNetworkLoopbackProperty": false,
-      "hotReloadEnabled": true
+      "commandName": "MsixPackage"
     },
     "winsat (Unpackaged)": {
       "commandName": "Project"

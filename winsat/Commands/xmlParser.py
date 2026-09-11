@@ -2,6 +2,9 @@ from lxml import etree
 import argparse
 import json
 import re
+import os
+import sys
+from traceback import format_exc
 
 cdata_regex = re.compile(r'<!\[CDATA\[\s+(.+?)\s+\]\]>', re.DOTALL)
 
@@ -19,7 +22,7 @@ def _get_text(element):
 def parse_element(element, output, show_in_termal=True):
     element = _get_text(element)
     if show_in_termal:
-        print(output + ',' + element)
+        print(output + ',' + element.strip())
     return output, element
 
 
@@ -40,10 +43,17 @@ def parse_xml(file, signal):
         signals = json.load(f)
 
     for k, v in signals.items():
+        k = k.lstrip('$')
         if isinstance(v, str):
             # ---------- 普通模式 ----------
             try:
                 element = root.xpath(v)
+                if v.lower() == 'line': # 线段模式：显示线
+                    print(f'<line>{k}')
+                    continue
+                if v.lower() == 'spacing': # 空格模式：添加空内容
+                    print(f'<spacing>')
+                    continue
                 if len(element) == 1:
                     parse_element(element[0], k)
                 elif len(element) == 0:
@@ -54,13 +64,19 @@ def parse_xml(file, signal):
             except ValueError:
                 print(k + ',无')
             except Exception as e:
-                print(f'<error>{e}')
+                print(f'<error>(来自普通模式) 解析 "{k}" 遇到未处理的错误: {e}\\n{format_exc().replace("\n", "\\n")}')
 
         elif isinstance(v, list):
-            # ---------- 合并模式 / 后缀模式 ----------
+            # ---------- 合并模式 / 后缀模式 / 翻译模式 ----------
             try:
-                if len(v) != 2 or not isinstance(v[1], str):
-                    print('<error>合并/后缀模式下，列表格式应为 [xpath, unit] 或 [[path1, path2, ...], sep]')
+                if len(v) != 2:
+                    print(f'<error>合并 / 后缀 / 翻译模式 下，列表应为2项 (符号名: "{k}")')
+                elif isinstance(v[1], dict):
+                    # 翻译模式：v = [xpath, {source: translated}]
+                    xpath, translations = v
+                    value = _get_text(_xpath_first(root, xpath))
+
+                    print(k + ',' + translations.get(value, value))
                 elif isinstance(v[0], list):
                     # 合并模式：v = [[path1, path2, ...], sep]
                     paths, sep = v
@@ -73,14 +89,46 @@ def parse_xml(file, signal):
                     value = _get_text(_xpath_first(root, xpath))
                     print(k + ',' + value + unit)
                 else:
-                    print('<error>合并/后缀模式下，列表首项应为字符串或字符串列表')
+                    print(f'<error>合并/后缀模式下，列表首项应为字符串或字符串列表 (符号名: "{k}")')
             except ValueError:
                 print(k + ',无')
             except Exception as e:
-                print(f'<error>{e}')
+                print(f'<error>(来自合并模式 / 后缀模式) 解析 "{k}" 遇到未处理的错误: {e}\\n{format_exc().replace("\n", "\\n")}')
         else:
-            print('<error>出现了未知的符号')
+            print(f'<error>出现了未知的符号 (符号名: "{k}")')
 
+def main():
+    parser = argparse.ArgumentParser(
+        description="处理符号文件"
+    )
+    parser.add_argument(
+        "source",
+        help="源文件路径"
+    )
+    parser.add_argument(
+        "symbol",
+        help="符号文件路径"
+    )
+    args = parser.parse_args()
+
+    # 收集所有路径并逐一检查
+    all_exist = True
+    if not os.path.exists(args.source):
+        print(f"<error>源文件路径 '{args.source}' 不存在")
+        all_exist = False
+
+    if not os.path.exists(args.symbol):
+        print(f"<error>符号文件路径 '{args.symbol}' 不存在")
+        all_exist = False
+
+    if not all_exist:
+        sys.exit(1)  # 存在不存在的路径，退出码为1
+
+    parse_xml(args.source, args.symbol)
+    sys.exit(0)
 
 if __name__ == '__main__':
-    parse_xml('C:\\Windows\\Performance\\WinSAT\\DataStore\\2026-09-05 21.36.19.510 Cpu.Assessment (Initial).WinSAT.xml', 'Signals\\CPU.json')
+    try:
+        main()
+    except Exception:
+        print(f'<error>{format_exc().replace("\n", "\\n")}')

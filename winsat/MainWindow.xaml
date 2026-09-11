@@ -21,7 +21,7 @@
         </Grid.RowDefinitions>
         <TitleBar
             x:Name="titleBar"
-            Title="Windows 跑分工具"
+            Title="Windows 体验指数"
             IsPaneToggleButtonVisible="True"
             PaneToggleRequested="TitleBar_PaneToggleRequested"
             Height="48"
@@ -51,15 +51,6 @@
                     Tag="Home"
                     Content="主页"
                     Icon="Home" />
-                <NavigationViewItem
-                    Tag="Advanced"
-                    Content="高级"
-                >
-                    <NavigationViewItem.Icon>
-                        <!-- 指定字体和对应的 Unicode 字符 -->
-                        <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE74C;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem
                     x:Name="DebugNavigation"
                     Visibility="Collapsed"

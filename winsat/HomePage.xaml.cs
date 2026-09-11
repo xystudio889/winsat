@@ -1,37 +1,37 @@
+using Microsoft.UI;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 using Windows.UI;
 using Windows.UI.ViewManagement;
+using winsat.widgets;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using IoPath = System.IO.Path;
 
 namespace winsat
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-
     public sealed partial class HomePage : Page
     {
         public ObservableCollection<FileInfo> Files { get; } = new();
-        private bool _isDialogShowing = false; // 互斥标志
-        private ScrollViewer _scrollViewer = null;
+        private bool _isDialogShowing = false;
         private bool _isRunning = false;
 
-        // 固定高亮颜色（按新配色）
         private static readonly SolidColorBrush DarkGrayBrush =
-            new SolidColorBrush(Color.FromArgb(255, 0x5C, 0x5C, 0x5C));
+            new SolidColorBrush(Color.FromArgb(255, 0x8A, 0x8A, 0x8A));
         private static readonly SolidColorBrush OrangeBrush =
             new SolidColorBrush(Color.FromArgb(255, 0xFF, 0x88, 0x0A));
         private static readonly SolidColorBrush LightBlueBrush =
@@ -41,58 +41,205 @@ namespace winsat
         private static readonly SolidColorBrush GreenBrush =
             new SolidColorBrush(Color.FromArgb(255, 0x05, 0xAB, 0x18));
 
-        // 动态默认文本颜色（随主题变化）
         private SolidColorBrush _defaultTextBrush;
-
-        // 用于监听系统主题变化的 UISettings
         private UISettings _uiSettings;
-
         private readonly DispatcherQueue _dispatcherQueue;
 
         public string xmlContent = String.Empty;
+
+        public string installDir = AppDomain.CurrentDomain.BaseDirectory; // 软件安装路径
+
+        public string deletedFiles = "";
+
+        public string winSatFilePath = IoPath.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Performance", "WinSAT", "DataStore");
 
         public HomePage()
         {
             InitializeComponent();
 
+            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
             FileComboBox.ItemsSource = Files;
+            HighlightBlockBackground.Visibility = Visibility.Collapsed;
 
+            // 运行加载函数
+            UpdateTheme();
+            StartThemeListener();
             LoadFilesAsync();
+            GetScore(null, null);
+
+            // TODO: 添加FlyOut处理
+            //foreach (string line in FiltFile("C:\\Windows\\Performance\\WinSAT\\DataStore\\2026-09-06 21.26.01.131 Formal.Assessment (Recent).WinSAT.xml"))
+            //{
+            //    deletedFiles += ("^\"" + line + "^\" ");
+            //}
+
+            //deleteFile(deletedFiles);
+        }
+
+        public async void deleteFile(String Files) {
+            // 1. 获取你的 .bat 脚本路径
+            string batchFilePath = IoPath.Combine(installDir, "Commands", "File_delete.bat");
+            Debug.WriteLine($"cmd.exe /C \"^\"{batchFilePath}^\" {deletedFiles} \"");
+
+            // 2. 配置进程启动信息
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "cmd.exe", // 关键点：启动 cmd.exe，而不是直接启动 .bat 文件[reference:1]
+                Arguments = $"/C \"^\"{batchFilePath}^\" {deletedFiles}\"", // /C 参数表示执行后关闭命令行窗口
+                Verb = "runas", // 这是请求管理员权限的关键[reference:4]
+                UseShellExecute = true, // Verb = "runas" 必须与 UseShellExecute = true 一起使用[reference:6]
+                // CreateNoWindow = true, // 可选：隐藏命令行窗口[reference:8]
+            };
+
+            try
+            {
+                // 3. 启动进程
+                var process = Process.Start(startInfo);
+
+                // 4. 可选：等待脚本执行完成
+                // process?.WaitForExit();
+            }
+            catch (Exception ex)
+            {
+                // 如果用户拒绝了 UAC 提权请求，或发生其他错误，会进入这里
+                // 你可以在这里处理错误，例如提示用户
+                ErrorDialog.Show(this.Content.XamlRoot, "用户取消了选择。");
+            }
+        }
+
+        public static string FormatDateTime(List<string> stringList)
+        {
+            if (stringList == null || stringList.Count == 0)
+                throw new ArgumentException("列表不能为空");
+
+            // 1. 获取最后一项
+            string lastItem = stringList.Last();
+
+            // 2. 按空格分割，取第一部分（日期时间字符串）
+            string dateTimePart = lastItem.Split(' ')[0] + " " + lastItem.Split(' ')[1];
+
+            // 3. 解析为 DateTime（格式：yyyy-MM-dd HH.mm.ss.fff）
+            string format = "yyyy-MM-dd HH.mm.ss.fff";
+            if (!DateTime.TryParseExact(dateTimePart, format, CultureInfo.InvariantCulture,
+                                        DateTimeStyles.None, out DateTime parsedDate))
+            {
+                throw new FormatException($"无法解析日期时间：{dateTimePart}");
+            }
+
+            // 4. 按系统当前区域设置格式化，使用 "G" 标准格式（含秒）
+            string formatted = parsedDate.ToString("G", CultureInfo.CurrentCulture);
+            return formatted;
+        }
+
+        public static List<String> GetTimeFileList(string directory)
+        {
+            if (string.IsNullOrEmpty(directory))
+                throw new ArgumentException("无法提取目录");
+
+            if (!Directory.Exists(directory))
+                throw new DirectoryNotFoundException($"目录不存在: {directory}");
+
+            return Directory.GetFiles(directory)
+                .Select(f => new FileInfo(f))
+                .OrderBy(fi => fi.LastWriteTime)
+                .Select(fi => fi.FullName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// 获取指定文件所在目录的文件列表（按修改时间升序），
+        /// 并以该文件为最底端，向上查找文件名包含 "Formal.Assessment" 的文件，
+        /// 返回介于两者之间的所有文件（不包括标记文件，包括输入文件本身）。
+        /// 若找不到标记文件，则返回从最旧文件到输入文件的所有文件。
+        /// </summary>
+        /// <param name="filePath">目标文件路径（必须存在于目录中）</param>
+        /// <param name="marker">标记字符串，默认 "Formal.Assessment"（忽略大小写）</param>
+        /// <returns>符合条件的文件完整路径列表</returns>
+
+        public static List<string> FiltFile(string filePath, string marker = "Formal.Assessment")
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("文件路径不能为空", nameof(filePath));
+
+            string directory = IoPath.GetDirectoryName(filePath);
+            if (string.IsNullOrEmpty(directory))
+                throw new ArgumentException("无法提取目录", nameof(filePath));
+
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"文件不存在: {filePath}");
+
+            if (!Directory.Exists(directory))
+                throw new DirectoryNotFoundException($"目录不存在: {directory}");
+
+            // 1. 获取目录中所有文件，按修改时间升序排序（最旧 → 最新）
+            var sortedFiles = GetTimeFileList(directory);
+
+            // 2. 找到输入文件在排序列表中的索引
+            int inputIndex = sortedFiles.IndexOf(filePath);
+            if (inputIndex == -1)
+                throw new InvalidOperationException($"文件 {filePath} 未在目录的文件列表中（可能已被删除）");
+
+            // 3. 从输入文件的前一个位置开始向上查找标记文件
+            int markerIndex = -1;
+            for (int i = inputIndex - 1; i >= 0; i--)
+            {
+                string fileName = IoPath.GetFileName(sortedFiles[i]);
+                if (fileName.IndexOf(marker, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    markerIndex = i;
+                    break;
+                }
+            }
+
+            // 4. 构造返回范围
+            int startIndex;
+            if (markerIndex != -1)
+            {
+                // 找到标记文件，从标记文件的下一个开始，到输入文件结束（含输入文件）
+                startIndex = markerIndex + 1;
+            }
+            else
+            {
+                // 未找到标记文件，从列表开头到输入文件（含输入文件）
+                startIndex = 0;
+            }
+
+            // 5. 提取子列表（包括输入文件）
+            int count = inputIndex - startIndex + 1;
+            if (count <= 0)
+                return new List<string>(); // 理论上不会发生，但若标记文件紧邻输入文件则返回空
+
+            return sortedFiles.GetRange(startIndex, count);
         }
 
         private async Task LoadFilesAsync()
         {
             try
             {
-                // 获取 Windows 目录路径（例如 C:\Windows）
-                string windowsDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-                // 组合 Minidump 文件夹路径
-                string minidumpDir = Path.Combine(windowsDir, "Performance", "WinSAT", "DataStore");
-
-                // 检查目录是否存在
-                if (!Directory.Exists(minidumpDir))
+                if (!Directory.Exists(winSatFilePath))
                 {
                     await new ContentDialog
                     {
                         Title = "目录不存在",
-                        Content = $"未找到分析文件夹：{minidumpDir}",
+                        Content = $"未找到分析文件夹：{winSatFilePath}",
                         CloseButtonText = "确定",
                         XamlRoot = this.Content.XamlRoot
                     }.ShowAsync();
                     return;
                 }
 
-                // 异步获取该目录下的所有文件（仅直接文件，不含子目录）
                 var files = await Task.Run(() =>
                 {
-                    var directoryInfo = new DirectoryInfo(minidumpDir);
+                    var directoryInfo = new DirectoryInfo(winSatFilePath);
                     return directoryInfo.GetFiles();
                 });
 
-                Files.Clear(); // 清空
+                Files.Clear();
                 foreach (var file in files)
                 {
-                    Files.Add(file);
+                    if(file.Name.Contains("Formal.Assessment")) {
+                        Files.Add(file);
+                    }
                 }
 
                 FileComboBox.SelectedIndex = 0;
@@ -119,46 +266,155 @@ namespace winsat
             }
         }
 
-        private void SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (FileComboBox.SelectedItem is FileInfo selectedFile)
             {
+                LoadingPanel.Visibility = Visibility.Visible; // 显示加载动画
+                LoadingRing.IsActive = true;
+                SelectorBar.Visibility = Visibility.Visible;
                 LoadingFileErrorBar.IsOpen = false;
-                // SelectedFilePathText.Text = selectedFile.FullName;
+                LoadingSignalErrorBar.IsOpen = false;
+                LoadingFileErrorBar.Message = "";
+                LoadingSignalErrorBar.Message = "";
+                HighlightBlockBackground.Visibility = Visibility.Collapsed;
+                FriendlyBackground.Visibility = Visibility.Collapsed;
+
+                ValuePanel.Children.Clear();
+                HighlightXml(""); // 清空之前的内容
 
                 if (!System.IO.File.Exists(selectedFile.FullName))
                 {
+                    LoadingFileErrorBar.Message = "文件不存在";
                     LoadingFileErrorBar.IsOpen = true;
                     return;
                 }
-                SelectorBar_SelectionChanged(SelectorBar, null);
+                SelectorBarItem selectedItem = SelectorBar.SelectedItem;
+                int currentSelectedIndex = SelectorBar.Items.IndexOf(selectedItem);
+                System.Type pageType;
+
+                switch (currentSelectedIndex)
+                {
+                    case 0:
+                        bool isBarError = false;
+                        var symbolPath = IoPath.Combine(installDir, "Commands", "Symbol.json");
+#if DEBUG
+                        var parserPath = IoPath.Combine(installDir, "Commands", "xmlparser.py");
+                        var command = "python";
+                        var args = $"\"{parserPath}\" \"{selectedFile.FullName}\" \"{symbolPath}\" ";
+#else
+                        var parserPath = IoPath.Combine(installDir, "Commands", "xmlparser.exe");
+                        var command = parserPath;
+                        var args = $"\"{selectedFile.FullName}\" \"{symbolPath}\" ";
+#endif
+
+                        if ((!File.Exists(parserPath)) || (!File.Exists(symbolPath)))
+                        {
+                            isBarError = true;
+                            FriendlyBackground.Visibility = Visibility.Collapsed;
+                            LoadingSignalErrorBar.Message += "解析器丢失，无法加载友好试图。";
+                        }
+
+                        string lines = (await ExecuteCommand(command, args));
+
+                        foreach (string line in lines.Split("\n"))
+                        {
+                            if (!string.IsNullOrEmpty(line) && line.StartsWith("<error>", StringComparison.Ordinal))
+                            {
+                                isBarError = true;
+                                LoadingSignalErrorBar.Message += $"\n{line.Replace("<error>", "").Replace("\\n", "\n")}";
+                            }
+                            else if (!string.IsNullOrEmpty(line) && line.StartsWith("<line>", StringComparison.Ordinal))
+                            {
+                                var panel = new Grid()
+                                {
+                                    Margin = new Thickness(0, 0, 0, 4)
+                                };
+                                var text = new TextBlock()
+                                {
+                                    Text = line.Replace("<line>", "").Trim(),
+                                    FontSize = 16,
+                                    FontWeight = FontWeights.Bold
+                                }; // 字符
+                                var Blueline = new Line() {
+                                    X1 = 90,
+                                    X2 = 680,
+                                    Y1 = 12,
+                                    Y2 = 12,
+                                    StrokeThickness = 4,
+                                    Stroke = new SolidColorBrush(Colors.SteelBlue)
+                                }; // 线
+
+                                panel.Children.Add(text);
+                                panel.Children.Add(Blueline);
+                                ValuePanel.Children.Add(panel);
+                            }
+                            else if (!string.IsNullOrEmpty(line) && line.StartsWith("<spacing>", StringComparison.Ordinal)) // 空格
+                            {
+                                var panel = new Grid()
+                                {
+                                    Margin = new Thickness(0, 0, 0, 2)
+                                };
+                                ValuePanel.Children.Add(panel);
+                            }
+                            else
+                            {
+                                String[] splited = line.Trim().Split(",");
+                                if (splited.Length == 2)
+                                {
+                                    var panel = new Grid(); // 面板
+
+                                    var fridenlyText = new TextBlock()
+                                    {
+                                        Text = splited[0],
+                                    }; // 键
+                                    var friendlyValue = new TextBlock()
+                                    {
+                                        Text = splited[1],
+                                        Margin = new Thickness(200, 0, 0, 0)
+                                    }; // 值
+
+                                    // 添加
+                                    panel.Children.Add(fridenlyText);
+                                    panel.Children.Add(friendlyValue);
+                                    ValuePanel.Children.Add(panel);
+                                }
+                            }
+                        }
+                        if (isBarError)
+                        {
+                            LoadingSignalErrorBar.Message = LoadingSignalErrorBar.Message.Trim();
+                            LoadingSignalErrorBar.IsOpen = true;
+                        } // 加载可视化试图
+
+                        FriendlyBackground.Visibility = Visibility.Visible;
+                        LoadingPanel.Visibility = Visibility.Collapsed;
+                        LoadingRing.IsActive = false;
+                        break;
+                    case 1:
+                        string fileContent = System.IO.File.ReadAllText(selectedFile.FullName);
+                        HighlightXml(fileContent);
+                        LoadingPanel.Visibility = Visibility.Collapsed;
+                        LoadingRing.IsActive = false;
+
+                        HighlightBlockBackground.Visibility = Visibility.Visible;
+                        break;
+                    default:
+                        return;
+                }
             }
             else
             {
-                LoadingFileErrorBar.IsOpen = true;
+                SelectorBar.Visibility = Visibility.Collapsed;
+                HighlightBlockBackground.Visibility = Visibility.Collapsed;
+                FriendlyBackground.Visibility = Visibility.Collapsed;
+                return;
             }
         }
 
-        private void SelectorBar_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+        public void selecterBar_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
         {
-            SelectorBarItem selectedItem = sender.SelectedItem;
-            int currentSelectedIndex = sender.Items.IndexOf(selectedItem);
-            System.Type pageType;
-
-            switch (currentSelectedIndex)
-            {
-                case 0:
-                    pageType = typeof(FriendlyPage);
-                    break;
-                case 1:
-                    HighlightXml("<code />");
-                    //pageType = typeof(CodePage);
-                    break;
-                default:
-                    return;
-            }
-
-            // ContentFrame.Navigate(pageType);
+            SelectionChanged(null, null);
         }
 
         public static List<string> RunPwsh(string command)
@@ -166,7 +422,7 @@ namespace winsat
             var results = new List<string>();
             var psi = new ProcessStartInfo
             {
-                FileName = "powershell.exe", // 或 "pwsh.exe"
+                FileName = "powershell.exe",
                 Arguments = $"-NoProfile -NonInteractive -Command \"{command}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -185,7 +441,6 @@ namespace winsat
                 string err = p.StandardError.ReadToEnd();
                 if (!string.IsNullOrEmpty(err))
                 {
-                    // 处理或记录错误
                     results.Add("[ERROR] " + err);
                 }
 
@@ -199,12 +454,11 @@ namespace winsat
         {
             LoadingFileErrorBar.IsOpen = false;
             await LoadFilesAsync();
-            RefreshedFile.Visibility = Visibility.Visible; // 显示刷新成功
+            RefreshedFile.Visibility = Visibility.Visible;
         }
 
         public async void GetScore(object sender, RoutedEventArgs e)
         {
-            // 防止并发
             if (_isDialogShowing) return;
             _isDialogShowing = true;
 
@@ -212,36 +466,57 @@ namespace winsat
             {
                 List<string> scores = RunPwsh("Get-CimInstance Win32_WinSAT");
                 List<string> score_list = [];
-                string status = "";
 
                 foreach (string result in scores)
                 {
-                    try { score_list.Add(result.Split(':')[1].Trim()); }
+                    try { 
+                        var score = result.Split(':')[1].Trim();
+
+                        if(score == "0") // 未跑分
+                        {
+                            score = "(未评分)";
+                        }
+                        score_list.Add(score);
+                    }
                     catch { continue; }
                 }
 
-                // 确保 score_list 有足够元素
                 if (score_list.Count < 8)
                 {
-                    // 处理数据不足情况
                     return;
                 }
 
+                // 设置显示
+                LatestTip.Visibility = Visibility.Collapsed;
+                RectangleCanvas.Visibility = Visibility.Visible;
+                MinScoreText.Visibility = Visibility.Visible;
+                LatestUpdateTime.Visibility = Visibility.Collapsed;
+                RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"];
+
                 switch (score_list[6])
                 {
-                    case "0": status = "未知"; break;
-                    case "1": status = "成功"; break;
+                    case "1":
+                        LatestTip.Visibility = Visibility.Visible;
+                        LatestUpdateTime.Visibility = Visibility.Visible;
+                        LatestUpdateTime.Text = "上次更新: " + FormatDateTime(GetTimeFileList(winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList());
+                        break;
                     case "2":
-                        status = "硬件变动";
-                        await ShowConfirmDialog("你的硬件变动了", "测试时与现在的硬件不一致，是否开始跑分后查看结果？");
+                        WinSatTip.Title = "检测到新硬件";
+                        WinSatTip.Message = "要求刷新 Windows 体验指数。";
+                        WinsatTipButton.Content = "立即刷新";
+                        WinSatTip.IsOpen = true;
+                        RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorDisabledBrush"];
                         break;
                     case "3":
-                        status = "未跑分";
-                        await ShowConfirmDialog("当前你未跑分", "是否开始跑分后查看结果？");
+                        WinSatTip.Title = "";
+                        WinSatTip.Message = "尚未建立 Windows 体验指数。";
+                        WinsatTipButton.Content = "为此计算机评分";
+                        WinSatTip.IsOpen = true;
+                        RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorDisabledBrush"];
+                        RectangleCanvas.Visibility = Visibility.Collapsed;
+                        MinScoreText.Visibility = Visibility.Collapsed;
                         break;
-                    case "4": status = "无效"; break;
-                    case "5": status = "用户自定义"; break;
-                    default: status = score_list[6]; break;
+                    default: break;
                 }
 
                 CPUScore.Text = score_list[0];
@@ -249,7 +524,6 @@ namespace winsat
                 DiskScore.Text = score_list[2];
                 GraphicsScore.Text = score_list[3];
                 MemoryScore.Text = score_list[4];
-                WinSATAssessmentState.Text = status;
                 WinSPRLevel.Text = score_list[7];
             }
             finally
@@ -258,421 +532,432 @@ namespace winsat
             }
         }
 
-        // 辅助方法，显示确认对话框并处理用户选择
-        private async Task ShowConfirmDialog(string title, string content)
+        public async Task<string> ExecuteCommand(string command, string arguments="")
         {
-            var dialog = new ContentDialog
+            var processInfo = new ProcessStartInfo(command, arguments)
             {
-                XamlRoot = this.Content.XamlRoot,
-                Title = title,
-                Content = content,
-                PrimaryButtonText = "确定",
-                SecondaryButtonText = "取消",
-                DefaultButton = ContentDialogButton.Primary
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
-            var result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.Primary)
+            string output = "";
+            string error = "";
+
+            using (var process = new Process { StartInfo = processInfo })
             {
-                // 用户选择“确定”，执行跑分（调用 RunScore 方法）
-                RunScore(null, null);
+                process.Start();
+
+                // 异步读取输出流
+                output = await process.StandardOutput.ReadToEndAsync();
+                error = await process.StandardError.ReadToEndAsync();
+
+                // 等待进程退出 (.NET 5+ 支持)
+                await process.WaitForExitAsync(); // 或使用 process.WaitForExit()
             }
-            // 选择“取消”则什么都不做
-        }
 
-        private async Task ExecuteCommand(string command)
-        {
-            var process = new Process();
-            process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = "/c " + command;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.CreateNoWindow = true;
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                return $"Error: {error}";
+            }
 
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            await process.WaitForExitAsync();
+            return output;
         }
 
         public async void RunScore(object sender, RoutedEventArgs e)
         {
             if (_isRunning) return;
             _isRunning = true;
-            RunScoreButton.IsEnabled = false;
+            WinSatTip.IsOpen = false;
 
-            // 执行命令
-            await ExecuteCommand("winsat formal -restart clean");
+            await ExecuteCommand("cmd", "/c winsat formal -restart clean");
 
-            RunScoreButton.IsEnabled = true;
             _isRunning = false;
 
             GetScore(null, null);
             RefreshFileButton_Click(null, null);
         }
 
-        public sealed partial class CodePage : Page
+        // ---- 主题检测与更新 ----
+        private void StartThemeListener()
         {
+            _uiSettings = new UISettings();
+            _uiSettings.ColorValuesChanged += OnColorValuesChanged;
+        }
 
-            // ---- 主题检测与更新 ----
-            private void StartThemeListener()
+        public static bool IsSystemDarkMode()
+        {
+            const string RegistryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
+            const string RegistryValueName = "AppsUseLightTheme";
+
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath))
             {
-                _uiSettings = new UISettings();
-                _uiSettings.ColorValuesChanged += OnColorValuesChanged;
+                object registryValueObject = key?.GetValue(RegistryValueName);
+                if (registryValueObject == null)
+                    return false;
+
+                int registryValue = (int)registryValueObject;
+                return registryValue == 0;
             }
+        }
 
-            public static bool IsSystemDarkMode()
+        private void OnColorValuesChanged(UISettings sender, object args)
+        {
+            _dispatcherQueue.TryEnqueue(() =>
             {
-                const string RegistryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
-                const string RegistryValueName = "AppsUseLightTheme";
+                UpdateTheme();
+                HighlightXml(xmlContent);
+            });
+        }
 
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath))
-                {
-                    object registryValueObject = key?.GetValue(RegistryValueName);
-                    if (registryValueObject == null)
-                        return false; // 默认返回浅色模式
-
-                    int registryValue = (int)registryValueObject;
-                    // 值为 0 表示深色模式，1 表示浅色模式
-                    return registryValue == 0;
-                }
+        private void UpdateTheme()
+        {
+            var theme = WindowThemeIsDark();
+            if (theme)
+            {
+                _defaultTextBrush = new SolidColorBrush(Color.FromArgb(255, 0xEF, 0xEF, 0xEF));
             }
-            private void OnColorValuesChanged(UISettings sender, object args)
+            else
             {
-                _dispatcherQueue.TryEnqueue(() =>
-                {
-                    UpdateTheme();
-                    HighlightXml(xmlContent);
-                });
+                _defaultTextBrush = new SolidColorBrush(Color.FromArgb(255, 0x10, 0x00, 0x01));
             }
+        }
 
-            private void UpdateTheme()
+        private bool WindowThemeIsDark()
+        {
+            var settings = new UISettings();
+            var backgroundColor = settings.GetColorValue(UIColorType.Background);
+            return backgroundColor.ToString() != "#FFFFFFFF";
+        }
+
+        // ---- XML 格式化（新增） ----
+        private string FormatXml(string xml)
+        {
+            if (string.IsNullOrEmpty(xml))
+                return null;
+
+            try
             {
-                var theme = WindowThemeIsDark();
-                if (theme)
+                var doc = new XmlDocument();
+                doc.PreserveWhitespace = false;
+                doc.LoadXml(xml);
+
+                using var sw = new StringWriter();
+                using var xtw = new XmlTextWriter(sw)
                 {
-                    _defaultTextBrush = new SolidColorBrush(Color.FromArgb(255, 0xEF, 0xEF, 0xEF));
-                }
-                else // Light
-                {
-                    _defaultTextBrush = new SolidColorBrush(Color.FromArgb(255, 0x10, 0x00, 0x01)); // #100001
-                }
+                    Formatting = Formatting.Indented,
+                    Indentation = 2
+                };
+                doc.WriteTo(xtw);
+                xtw.Flush();
+                return sw.ToString();
             }
-
-            private bool WindowThemeIsDark()
+            catch
             {
-                // 创建一个 UISettings 实例
-                var settings = new UISettings();
-
-                // 获取背景颜色值
-                var backgroundColor = settings.GetColorValue(UIColorType.Background);
-
-                Debug.WriteLine($"当前颜色：{backgroundColor.ToString()}");
-
-                // 判断：如果背景色接近黑色，则为深色模式；接近白色则为浅色模式[reference:2]
-                // bool isDarkMode = backgroundColor.ToString() == "#FF000000";
-                return backgroundColor.ToString() != "#FFFFFFFF";
+                // 格式化失败（例如 XML 无效），返回 null，后续使用原始内容
+                return null;
             }
+        }
 
-            // ---- 高亮逻辑 ----
+        // ---- 高亮逻辑（已集成格式化） ----
+        public void HighlightXml(string xml)
+        {
+            xmlContent = xml; // 保留原始内容
 
+            // 自动格式化（缩进2空格），若失败则保留原始
+            string formatted = FormatXml(xml);
+            if (!string.IsNullOrEmpty(formatted))
+                xml = formatted;
 
-            public void HighlightXml(string xml)
+            HighlightBlock.Blocks.Clear();
+            if (string.IsNullOrEmpty(xml)) return;
+
+            var paragraph = new Paragraph();
+            HighlightBlock.Blocks.Add(paragraph);
+
+            int index = 0;
+            while (index < xml.Length)
             {
-                xmlContent = xml;
-                HighlightBlock.Blocks.Clear();
-                if (string.IsNullOrEmpty(xml)) return;
-
-                var paragraph = new Paragraph();
-                HighlightBlock.Blocks.Add(paragraph);
-
-                int index = 0;
-                while (index < xml.Length)
+                char c = xml[index];
+                if (c == '<')
                 {
-                    char c = xml[index];
-                    if (c == '<')
+                    if (xml.Length - index >= 4 && xml.Substring(index, 4) == "<!--")
                     {
-                        if (xml.Length - index >= 4 && xml.Substring(index, 4) == "<!--")
-                        {
-                            int start = index;
-                            int end = xml.IndexOf("-->", index);
-                            if (end == -1) end = xml.Length;
-                            else end += 3;
-                            string comment = xml.Substring(start, end - start);
-                            AddRun(paragraph, comment, GreenBrush);
-                            index = end;
-                        }
-                        else if (xml.Length - index >= 2 && xml.Substring(index, 2) == "<?")
-                        {
-                            int start = index;
-                            int end = xml.IndexOf("?>", index);
-                            if (end == -1) end = xml.Length;
-                            else end += 2;
-                            string pi = xml.Substring(start, end - start);
-                            AddRun(paragraph, pi, DarkGrayBrush);
-                            index = end;
-                        }
-                        else if (xml.Length - index >= 9 && xml.Substring(index, 9) == "<![CDATA[")
-                        {
-                            int start = index;
-                            int end = xml.IndexOf("]]>", index);
-                            if (end == -1) end = xml.Length;
-                            else end += 3;
-                            string cdata = xml.Substring(start, end - start);
-                            AddRun(paragraph, cdata, null); // 使用默认文本颜色
-                            index = end;
-                        }
-                        else
-                        {
-                            int start = index;
-                            int end = FindTagEnd(xml, index);
-                            if (end == -1) end = xml.Length;
-                            string tag = xml.Substring(start, end - start);
-                            ParseTag(tag, paragraph);
-                            index = end;
-                        }
+                        int start = index;
+                        int end = xml.IndexOf("-->", index);
+                        if (end == -1) end = xml.Length;
+                        else end += 3;
+                        string comment = xml.Substring(start, end - start);
+                        AddRun(paragraph, comment, GreenBrush);
+                        index = end;
+                    }
+                    else if (xml.Length - index >= 2 && xml.Substring(index, 2) == "<?")
+                    {
+                        int start = index;
+                        int end = xml.IndexOf("?>", index);
+                        if (end == -1) end = xml.Length;
+                        else end += 2;
+                        string pi = xml.Substring(start, end - start);
+                        AddRun(paragraph, pi, DarkGrayBrush);
+                        index = end;
+                    }
+                    else if (xml.Length - index >= 9 && xml.Substring(index, 9) == "<![CDATA[")
+                    {
+                        int start = index;
+                        int end = xml.IndexOf("]]>", index);
+                        if (end == -1) end = xml.Length;
+                        else end += 3;
+                        string cdata = xml.Substring(start, end - start);
+                        AddRun(paragraph, cdata, null);
+                        index = end;
                     }
                     else
                     {
                         int start = index;
-                        int next = xml.IndexOf('<', index);
-                        if (next == -1) next = xml.Length;
-                        string text = xml.Substring(start, next - start);
-                        AddRun(paragraph, text, null);
-                        index = next;
+                        int end = FindTagEnd(xml, index);
+                        if (end == -1) end = xml.Length;
+                        string tag = xml.Substring(start, end - start);
+                        ParseTag(tag, paragraph);
+                        index = end;
                     }
                 }
-            }
-
-            private int FindTagEnd(string xml, int start)
-            {
-                int i = start + 1;
-                bool inQuote = false;
-                char quoteChar = '\0';
-                while (i < xml.Length)
+                else
                 {
-                    char c = xml[i];
-                    if (!inQuote && (c == '"' || c == '\''))
-                    {
-                        inQuote = true;
-                        quoteChar = c;
-                    }
-                    else if (inQuote && c == quoteChar)
-                    {
-                        inQuote = false;
-                    }
-                    else if (!inQuote && c == '>')
-                    {
-                        return i + 1;
-                    }
-                    i++;
-                }
-                return -1;
-            }
-
-            private void ParseTag(string tag, Paragraph paragraph)
-            {
-                var tokens = TokenizeTag(tag);
-                foreach (var token in tokens)
-                {
-                    SolidColorBrush brush = null;
-                    switch (token.Type)
-                    {
-                        case TokenType.Delimiter:
-                            brush = DarkGrayBrush;
-                            break;
-                        case TokenType.TagName:
-                            brush = OrangeBrush;
-                            break;
-                        case TokenType.AttributeName:
-                            brush = LightBlueBrush;
-                            break;
-                        case TokenType.AttributeValue:
-                            brush = DeepBlueBrush;
-                            break;
-                        case TokenType.Whitespace:
-                            brush = null; // 使用默认文本颜色
-                            break;
-                    }
-                    AddRun(paragraph, token.Text, brush);
+                    int start = index;
+                    int next = xml.IndexOf('<', index);
+                    if (next == -1) next = xml.Length;
+                    string text = xml.Substring(start, next - start);
+                    AddRun(paragraph, text, null);
+                    index = next;
                 }
             }
+        }
 
-            private enum TokenType
+        private int FindTagEnd(string xml, int start)
+        {
+            int i = start + 1;
+            bool inQuote = false;
+            char quoteChar = '\0';
+            while (i < xml.Length)
             {
-                Delimiter,
-                TagName,
-                AttributeName,
-                AttributeValue,
-                Whitespace
-            }
-
-            private class Token
-            {
-                public string Text { get; set; }
-                public TokenType Type { get; set; }
-            }
-
-            private List<Token> TokenizeTag(string tag)
-            {
-                var tokens = new List<Token>();
-                int i = 0;
-                const int STATE_START = 0;
-                const int STATE_TAG_NAME = 1;
-                const int STATE_AFTER_NAME = 2;
-                const int STATE_ATTRIBUTE_NAME = 3;
-                const int STATE_AFTER_ATTR_NAME = 4;
-                const int STATE_AFTER_EQUAL = 5;
-                const int STATE_ATTRIBUTE_VALUE = 6;
-                int state = STATE_START;
-                int tokenStart = 0;
-                char quoteChar = '\0';
-
-                while (i < tag.Length)
+                char c = xml[i];
+                if (!inQuote && (c == '"' || c == '\''))
                 {
-                    char c = tag[i];
-                    switch (state)
-                    {
-                        case STATE_START:
-                            if (c == '<')
-                            {
-                                tokens.Add(new Token { Text = "<", Type = TokenType.Delimiter });
+                    inQuote = true;
+                    quoteChar = c;
+                }
+                else if (inQuote && c == quoteChar)
+                {
+                    inQuote = false;
+                }
+                else if (!inQuote && c == '>')
+                {
+                    return i + 1;
+                }
+                i++;
+            }
+            return -1;
+        }
+
+        private void ParseTag(string tag, Paragraph paragraph)
+        {
+            var tokens = TokenizeTag(tag);
+            foreach (var token in tokens)
+            {
+                SolidColorBrush brush = null;
+                switch (token.Type)
+                {
+                    case TokenType.Delimiter:
+                        brush = DarkGrayBrush;
+                        break;
+                    case TokenType.TagName:
+                        brush = OrangeBrush;
+                        break;
+                    case TokenType.AttributeName:
+                        brush = LightBlueBrush;
+                        break;
+                    case TokenType.AttributeValue:
+                        brush = DeepBlueBrush;
+                        break;
+                    case TokenType.Whitespace:
+                        brush = null;
+                        break;
+                }
+                AddRun(paragraph, token.Text, brush);
+            }
+        }
+
+        private enum TokenType
+        {
+            Delimiter,
+            TagName,
+            AttributeName,
+            AttributeValue,
+            Whitespace
+        }
+
+        private class Token
+        {
+            public string Text { get; set; }
+            public TokenType Type { get; set; }
+        }
+
+        private List<Token> TokenizeTag(string tag)
+        {
+            var tokens = new List<Token>();
+            int i = 0;
+            const int STATE_START = 0;
+            const int STATE_TAG_NAME = 1;
+            const int STATE_AFTER_NAME = 2;
+            const int STATE_ATTRIBUTE_NAME = 3;
+            const int STATE_AFTER_ATTR_NAME = 4;
+            const int STATE_AFTER_EQUAL = 5;
+            const int STATE_ATTRIBUTE_VALUE = 6;
+            int state = STATE_START;
+            int tokenStart = 0;
+            char quoteChar = '\0';
+
+            while (i < tag.Length)
+            {
+                char c = tag[i];
+                switch (state)
+                {
+                    case STATE_START:
+                        if (c == '<')
+                        {
+                            tokens.Add(new Token { Text = "<", Type = TokenType.Delimiter });
+                            i++;
+                            state = STATE_TAG_NAME;
+                        }
+                        else i++;
+                        break;
+
+                    case STATE_TAG_NAME:
+                        if (char.IsLetterOrDigit(c) || c == '_' || c == ':' || c == '.' || c == '-')
+                        {
+                            tokenStart = i;
+                            while (i < tag.Length && (char.IsLetterOrDigit(tag[i]) || tag[i] == '_' || tag[i] == ':' || tag[i] == '.' || tag[i] == '-'))
                                 i++;
+                            string name = tag.Substring(tokenStart, i - tokenStart);
+                            tokens.Add(new Token { Text = name, Type = TokenType.TagName });
+                            state = STATE_AFTER_NAME;
+                        }
+                        else if (c == '/')
+                        {
+                            tokens.Add(new Token { Text = "/", Type = TokenType.Delimiter });
+                            i++;
+                            if (i < tag.Length && (char.IsLetterOrDigit(tag[i]) || tag[i] == '_' || tag[i] == ':' || tag[i] == '.' || tag[i] == '-'))
                                 state = STATE_TAG_NAME;
-                            }
-                            else i++;
-                            break;
-
-                        case STATE_TAG_NAME:
-                            if (char.IsLetterOrDigit(c) || c == '_' || c == ':' || c == '.' || c == '-')
-                            {
-                                tokenStart = i;
-                                while (i < tag.Length && (char.IsLetterOrDigit(tag[i]) || tag[i] == '_' || tag[i] == ':' || tag[i] == '.' || tag[i] == '-'))
-                                    i++;
-                                string name = tag.Substring(tokenStart, i - tokenStart);
-                                tokens.Add(new Token { Text = name, Type = TokenType.TagName });
-                                state = STATE_AFTER_NAME;
-                            }
-                            else if (c == '/')
-                            {
-                                tokens.Add(new Token { Text = "/", Type = TokenType.Delimiter });
-                                i++;
-                                if (i < tag.Length && (char.IsLetterOrDigit(tag[i]) || tag[i] == '_' || tag[i] == ':' || tag[i] == '.' || tag[i] == '-'))
-                                    state = STATE_TAG_NAME;
-                                else
-                                    state = STATE_AFTER_NAME;
-                            }
-                            else state = STATE_AFTER_NAME;
-                            break;
-
-                        case STATE_AFTER_NAME:
-                            if (char.IsWhiteSpace(c))
-                            {
-                                tokenStart = i;
-                                while (i < tag.Length && char.IsWhiteSpace(tag[i])) i++;
-                                string ws = tag.Substring(tokenStart, i - tokenStart);
-                                tokens.Add(new Token { Text = ws, Type = TokenType.Whitespace });
-                                state = STATE_ATTRIBUTE_NAME;
-                            }
-                            else if (c == '/')
-                            {
-                                tokens.Add(new Token { Text = "/", Type = TokenType.Delimiter });
-                                i++;
-                                state = STATE_AFTER_NAME;
-                            }
-                            else if (c == '>')
-                            {
-                                tokens.Add(new Token { Text = ">", Type = TokenType.Delimiter });
-                                i++;
-                                return tokens;
-                            }
-                            else if (c == '=')
-                            {
-                                tokens.Add(new Token { Text = "=", Type = TokenType.Delimiter });
-                                i++;
-                                state = STATE_AFTER_EQUAL;
-                            }
-                            else state = STATE_ATTRIBUTE_NAME;
-                            break;
-                        case STATE_ATTRIBUTE_NAME:
-                            if (char.IsLetterOrDigit(c) || c == '_' || c == ':' || c == '.' || c == '-')
-                            {
-                                tokenStart = i;
-                                while (i < tag.Length && (char.IsLetterOrDigit(tag[i]) || tag[i] == '_' || tag[i] == ':' || tag[i] == '.' || tag[i] == '-'))
-                                    i++;
-                                string attrName = tag.Substring(tokenStart, i - tokenStart);
-                                tokens.Add(new Token { Text = attrName, Type = TokenType.AttributeName });
-                                state = STATE_AFTER_ATTR_NAME;
-                            }
-                            else if (c == '/' || c == '>')
-                            {
-                                // 回到 STATE_AFTER_NAME 让结束符号被正确处理
-                                state = STATE_AFTER_NAME;
-                                // 不 i++，让下一循环处理该字符
-                            }
                             else
-                            {
-                                i++; // 跳过其他无效字符
-                            }
-                            break;
-
-                        case STATE_AFTER_ATTR_NAME:
-                            if (char.IsWhiteSpace(c))
-                            {
-                                tokenStart = i;
-                                while (i < tag.Length && char.IsWhiteSpace(tag[i])) i++;
-                                string ws = tag.Substring(tokenStart, i - tokenStart);
-                                tokens.Add(new Token { Text = ws, Type = TokenType.Whitespace });
-                                state = STATE_AFTER_ATTR_NAME;
-                            }
-                            else if (c == '=')
-                            {
-                                tokens.Add(new Token { Text = "=", Type = TokenType.Delimiter });
-                                i++;
-                                state = STATE_AFTER_EQUAL;
-                            }
-                            else state = STATE_AFTER_NAME;
-                            break;
-
-                        case STATE_AFTER_EQUAL:
-                            if (char.IsWhiteSpace(c))
-                            {
-                                tokenStart = i;
-                                while (i < tag.Length && char.IsWhiteSpace(tag[i])) i++;
-                                string ws = tag.Substring(tokenStart, i - tokenStart);
-                                tokens.Add(new Token { Text = ws, Type = TokenType.Whitespace });
-                                state = STATE_ATTRIBUTE_VALUE;
-                            }
-                            else if (c == '"' || c == '\'')
-                            {
-                                quoteChar = c;
-                                tokenStart = i;
-                                i++;
-                                while (i < tag.Length && tag[i] != quoteChar) i++;
-                                if (i < tag.Length) i++;
-                                string value = tag.Substring(tokenStart, i - tokenStart);
-                                tokens.Add(new Token { Text = value, Type = TokenType.AttributeValue });
                                 state = STATE_AFTER_NAME;
-                            }
-                            else i++;
-                            break;
+                        }
+                        else state = STATE_AFTER_NAME;
+                        break;
 
-                        default: i++; break;
-                    }
+                    case STATE_AFTER_NAME:
+                        if (char.IsWhiteSpace(c))
+                        {
+                            tokenStart = i;
+                            while (i < tag.Length && char.IsWhiteSpace(tag[i])) i++;
+                            string ws = tag.Substring(tokenStart, i - tokenStart);
+                            tokens.Add(new Token { Text = ws, Type = TokenType.Whitespace });
+                            state = STATE_ATTRIBUTE_NAME;
+                        }
+                        else if (c == '/')
+                        {
+                            tokens.Add(new Token { Text = "/", Type = TokenType.Delimiter });
+                            i++;
+                            state = STATE_AFTER_NAME;
+                        }
+                        else if (c == '>')
+                        {
+                            tokens.Add(new Token { Text = ">", Type = TokenType.Delimiter });
+                            i++;
+                            return tokens;
+                        }
+                        else if (c == '=')
+                        {
+                            tokens.Add(new Token { Text = "=", Type = TokenType.Delimiter });
+                            i++;
+                            state = STATE_AFTER_EQUAL;
+                        }
+                        else state = STATE_ATTRIBUTE_NAME;
+                        break;
+
+                    case STATE_ATTRIBUTE_NAME:
+                        if (char.IsLetterOrDigit(c) || c == '_' || c == ':' || c == '.' || c == '-')
+                        {
+                            tokenStart = i;
+                            while (i < tag.Length && (char.IsLetterOrDigit(tag[i]) || tag[i] == '_' || tag[i] == ':' || tag[i] == '.' || tag[i] == '-'))
+                                i++;
+                            string attrName = tag.Substring(tokenStart, i - tokenStart);
+                            tokens.Add(new Token { Text = attrName, Type = TokenType.AttributeName });
+                            state = STATE_AFTER_ATTR_NAME;
+                        }
+                        else if (c == '/' || c == '>')
+                        {
+                            state = STATE_AFTER_NAME;
+                        }
+                        else
+                        {
+                            i++;
+                        }
+                        break;
+
+                    case STATE_AFTER_ATTR_NAME:
+                        if (char.IsWhiteSpace(c))
+                        {
+                            tokenStart = i;
+                            while (i < tag.Length && char.IsWhiteSpace(tag[i])) i++;
+                            string ws = tag.Substring(tokenStart, i - tokenStart);
+                            tokens.Add(new Token { Text = ws, Type = TokenType.Whitespace });
+                            state = STATE_AFTER_ATTR_NAME;
+                        }
+                        else if (c == '=')
+                        {
+                            tokens.Add(new Token { Text = "=", Type = TokenType.Delimiter });
+                            i++;
+                            state = STATE_AFTER_EQUAL;
+                        }
+                        else state = STATE_AFTER_NAME;
+                        break;
+
+                    case STATE_AFTER_EQUAL:
+                        if (char.IsWhiteSpace(c))
+                        {
+                            tokenStart = i;
+                            while (i < tag.Length && char.IsWhiteSpace(tag[i])) i++;
+                            string ws = tag.Substring(tokenStart, i - tokenStart);
+                            tokens.Add(new Token { Text = ws, Type = TokenType.Whitespace });
+                            state = STATE_ATTRIBUTE_VALUE;
+                        }
+                        else if (c == '"' || c == '\'')
+                        {
+                            quoteChar = c;
+                            tokenStart = i;
+                            i++;
+                            while (i < tag.Length && tag[i] != quoteChar) i++;
+                            if (i < tag.Length) i++;
+                            string value = tag.Substring(tokenStart, i - tokenStart);
+                            tokens.Add(new Token { Text = value, Type = TokenType.AttributeValue });
+                            state = STATE_AFTER_NAME;
+                        }
+                        else i++;
+                        break;
+
+                    default: i++; break;
                 }
-                return tokens;
             }
+            return tokens;
+        }
 
-            // 添加 Run，若 brush 为 null 则使用当前主题对应的默认颜色
-            private void AddRun(Paragraph paragraph, string text, SolidColorBrush brush)
-            {
-                if (string.IsNullOrEmpty(text)) return;
-                var run = new Run { Text = text };
-                run.Foreground = brush ?? _defaultTextBrush;
-                paragraph.Inlines.Add(run);
-            }
+        private void AddRun(Paragraph paragraph, string text, SolidColorBrush brush)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            var run = new Run { Text = text };
+            run.Foreground = brush ?? _defaultTextBrush;
+            paragraph.Inlines.Add(run);
         }
     }
 }

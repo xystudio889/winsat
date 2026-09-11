@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
@@ -14,10 +14,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="AdvancedPage.xaml" />
-    <None Remove="CodePage.xaml" />
     <None Remove="DebugPage.xaml" />
-    <None Remove="FriendlyPage.xaml" />
     <None Remove="HomePage.xaml" />
     <None Remove="SettingsPage.xaml" />
   </ItemGroup>
@@ -30,9 +27,8 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-	<Content Include="Signals\**\*.*">
-		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Content>
+	<Content Include="Commands\**\*.*" Exclude="Commands\**\*.exe;Commands\maketoexe.bat" Condition="'$(Configuration)' == 'Debug'" />
+	<Content Include="Commands\**\*.*" Exclude="Commands\**\*.py;Commands\maketoexe.bat" Condition="'$(Configuration)' != 'Debug'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -62,25 +58,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Signals\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="CodePage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="FriendlyPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
     <Page Update="DebugPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="AdvancedPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
@@ -98,8 +76,7 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">False</PublishTrimmed>
+    <PublishTrimmed>False</PublishTrimmed>
     <DefaultLanguage>zh-CN</DefaultLanguage>
     <PackageCertificateKeyFile>winsat_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>

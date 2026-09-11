@@ -25,11 +25,11 @@ namespace winsat
             rootFrame.Navigate(typeof(HomePage));
 
 #if DEBUG
-            this.Title = "Windows 跑分工具 测试版";
+            this.Title = "Windows 体验指数 测试版";
             titleBar.Subtitle = "测试版";
             DebugNavigation.Visibility = Visibility.Visible;
 #else
-            this.Title = "Windows 跑分工具";
+            this.Title = "Windows 体验指数";
             DebugNavigation.Visibility = Visibility.Collapsed;
 #endif
         }
@@ -50,9 +50,6 @@ namespace winsat
                 {
                     case "Home":
                         rootFrame.Navigate(typeof(HomePage));
-                        break;
-                    case "Advanced":
-                        rootFrame.Navigate(typeof(AdvancedPage));
                         break;
                     case "Debug":
                         rootFrame.Navigate(typeof(DebugPage));

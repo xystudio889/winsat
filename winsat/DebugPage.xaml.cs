@@ -22,9 +22,6 @@ namespace winsat
 {
     public sealed partial class DebugPage : Page
     {
-        private ScrollViewer _scrollViewer = null;
-        private bool _isRunning = false;
-
         public DebugPage()
         {
             this.InitializeComponent();

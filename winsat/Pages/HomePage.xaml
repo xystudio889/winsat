@@ -17,29 +17,25 @@
         </Grid.RowDefinitions >
         <!-- 主内容 -->
         <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin="36 0 0 0" >
+            <TextBlock
+                Margin="0,40,36,36"
+                Style="{StaticResource TitleTextBlockStyle}"
+                x:Uid="HomeTitle" />
             <TextBlock 
                 Grid.Row = "1" 
-                FontSize = "28" 
-                Text = "为此计算机评分并提高性能" 
-                Margin = "0 40 0 36"  
-            />
-            <TextBlock 
-                Grid.Row = "1" 
-                Text = "Windows 体验指数可评估主要系统组件，分数范围从 1.0 到 9.9。" 
+                x:Uid="HomeDesc"
                 Margin = "0 0 0 24"  
             />
             <InfoBar
                 x:Name="WinSatTip"
                 IsIconVisible="True"
                 Severity="Warning"
-                Message="尚未建立 Windows 体验指数。"
                 IsClosable="False"
                 Margin="0 0 36 12"
             >
                 <InfoBar.ActionButton>
                     <Button 
                         x:Name="WinsatTipButton"
-                        Content="为此计算机评分"
                         Click="RunScore"
                         HorizontalAlignment="Right"
                     />
@@ -49,116 +45,116 @@
             <Grid>
                 <!-- 分数方框 -->
                 <Canvas x:Name="RectangleCanvas">
-                    <Border x:Name="RectangleBackground"
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="550" Canvas.Top="50" >
+                        <Border x:Name="RectangleBackground"
                             Background="{ThemeResource AccentTextFillColorTertiaryBrush}" 
                             CornerRadius="{StaticResource OverlayCornerRadius}" 
                             Width="48" 
-                            Height="48"
-                            Canvas.Left="530"
-                            Canvas.Top="90"
-                    >
-                        <TextBlock Text="无" 
-                        x:Name="WinSPRLevel"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="White"
-                        FontSize="20"
-                        FontWeight="Bold"
-                    />
-                    </Border>
+                            Height="48">
+                            <TextBlock
+                                x:Name="WinSPRLevel"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                FontSize="20"
+                                FontWeight="Bold"
+                            />
+                        </Border>
+                        <TextBlock x:Name="MinScoreText" x:Uid="subScoreTip" HorizontalAlignment="Center" Margin="0 78 0 0" />
+                    </Grid>
                 </Canvas>
-                <TextBlock x:Name="MinScoreText" Text="由最低子分数决定" Margin = "500 148 0 0" />
                 <Line Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
                       X1="-10" Y1="0"
-                      X2="650" Y2="0"
+                      X2="790" Y2="0"
                       StrokeThickness="3"  Margin = "0 0 0 0" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="组件" Margin = "0 8 0 0" FontWeight="Bold" />
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="评分的项目" Margin = "140 8 0 0"/>
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="子分数" Margin = "380 8 0 0"/>
-                <TextBlock Grid.Row="1" Grid.Column="3" Text="基本分数" Margin = "500 8 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="Component" Margin = "0 8 0 0" FontWeight="Bold" />
+                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="ScoredItems" Margin = "140 8 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="SubScore" Margin = "460 8 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" x:Uid="BaseScore" Margin = "590 8 0 0"/>
                 <Line Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
                       X1="-10" Y1="0"
-                      X2="650" Y2="0"
+                      X2="790" Y2="0"
                       StrokeThickness="3"  Margin = "0 36 0 0" />
-                <TextBlock Grid.Row = "2" Grid.Column="0" Text = "处理器:"  FontWeight="Bold" Margin = "0 45 0 0"/>
-                <TextBlock Grid.Row = "3" Grid.Column="0" Text = "游戏图形:"  FontWeight="Bold" Margin = "0 135 0 0"/>
-                <TextBlock Grid.Row = "4" Grid.Column="0" Text = "主硬盘:"  FontWeight="Bold" Margin = "0 165 0 0"/>
-                <TextBlock Grid.Row = "5" Grid.Column="0" Text = "图形:"  FontWeight="Bold" Margin = "0 105 0 0"/>
-                <TextBlock Grid.Row = "6" Grid.Column="0" Text = "内存(RAM):" FontWeight="Bold" Margin = "0 75 0 0"/>
-                <TextBlock Grid.Row = "2" Grid.Column="1" Text = "每秒计算速度" Margin = "140 45 0 0"/>
-                <TextBlock Grid.Row = "3" Grid.Column="1" Text = "3D 商务和游戏图形性能" Margin = "140 135 0 0"/>
-                <TextBlock Grid.Row = "4" Grid.Column="1" Text = "硬盘数据传输速率" Margin = "140 165 0 0"/>
-                <TextBlock Grid.Row = "5" Grid.Column="1" Text = "桌面图形性能" Margin = "140 105 0 0"/>
-                <TextBlock Grid.Row = "6" Grid.Column="1" Text = "每秒内存运行速度" Margin = "140 75 0 0"/>
-                <TextBlock Grid.Row = "2" Grid.Column="2" Text = "(未评分)" Margin = "380 45 0 0" x:Name = "CPUScore" />
-                <TextBlock Grid.Row = "3" Grid.Column="2" Text = "(未评分)" Margin = "380 135 0 0" x:Name = "D3DScore" />
-                <TextBlock Grid.Row = "4" Grid.Column="2" Text = "(未评分)" Margin = "380 165 0 0" x:Name = "DiskScore" />
-                <TextBlock Grid.Row = "5" Grid.Column="2" Text = "(未评分)" Margin = "380 105 0 0" x:Name = "GraphicsScore" />
-                <TextBlock Grid.Row = "6" Grid.Column="2" Text = "(未评分)" Margin = "380 75 0 0" x:Name = "MemoryScore" />
+                <TextBlock Grid.Row = "2" Grid.Column="0" x:Uid="Processor"  FontWeight="Bold" Margin = "0 45 0 0"/>
+                <TextBlock Grid.Row = "3" Grid.Column="0" x:Uid="GamingGraphics"  FontWeight="Bold" Margin = "0 135 0 0"/>
+                <TextBlock Grid.Row = "4" Grid.Column="0" x:Uid="PrimaryDisk"  FontWeight="Bold" Margin = "0 165 0 0"/>
+                <TextBlock Grid.Row = "5" Grid.Column="0" x:Uid="Graphics"  FontWeight="Bold" Margin = "0 105 0 0"/>
+                <TextBlock Grid.Row = "6" Grid.Column="0" x:Uid="MemoryRAM" FontWeight="Bold" Margin = "0 75 0 0"/>
+                <TextBlock Grid.Row = "2" Grid.Column="1" x:Uid="CalcPerSecond" Margin = "140 45 0 0"/>
+                <TextBlock Grid.Row = "3" Grid.Column="1" x:Uid="GamingGraphicsDesc" Margin = "140 135 0 0"/>
+                <TextBlock Grid.Row = "4" Grid.Column="1" x:Uid="DiskTransferRate" Margin = "140 165 0 0"/>
+                <TextBlock Grid.Row = "5" Grid.Column="1" x:Uid="DesktopGraphics" Margin = "140 105 0 0"/>
+                <TextBlock Grid.Row = "6" Grid.Column="1" x:Uid="MemoryOps" Margin = "140 75 0 0"/>
+                <TextBlock Grid.Row = "2" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 45 0 0" x:Name = "CPUScore" />
+                <TextBlock Grid.Row = "3" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 135 0 0" x:Name = "D3DScore" />
+                <TextBlock Grid.Row = "4" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 165 0 0" x:Name = "DiskScore" />
+                <TextBlock Grid.Row = "5" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 105 0 0" x:Name = "GraphicsScore" />
+                <TextBlock Grid.Row = "6" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 75 0 0" x:Name = "MemoryScore" />
             </Grid>
 
             <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin = "0 24 0 0" Spacing="5" >
                 <StackPanel x:Name="LatestTip" Grid.Row = "1" Orientation = "Horizontal" Spacing="440">
-                    <TextBlock Text="你的分数是最新的。" ></TextBlock>
-                    <HyperlinkButton Content="重新运行评估" Click="RunScore" />
+                    <TextBlock x:Uid="LatestScore" ></TextBlock>
+                    <HyperlinkButton x:Uid="RerunAssessment" Click="RunScore" />
                 </StackPanel>
                 <Grid Grid.Row = "1">
-                    <TextBlock x:Name="LatestUpdateTime" Text="上次更新: 2025/10/10 20:20:20" Margin = "0 4 0 0" />
-                    <HyperlinkButton Content="重新加载评估" Click="GetScore" Margin="566 4 0 0" />
+                    <TextBlock x:Name="LatestUpdateTime" Margin = "0 4 0 0" />
+                    <HyperlinkButton x:Uid="ReloadAssessment" Click="GetScore" Margin="566 4 0 0" />
                 </Grid>
             </StackPanel>
 
             <Expander Width="680" HorizontalContentAlignment="Left" Padding="0" Margin="0 16 0 0">
                 <Expander.Header>
-                    <TextBlock Text="高级信息" />
+                    <TextBlock x:Uid="AdvancedInfo" />
                 </Expander.Header>
                 <Expander.Content>
                     <StackPanel Width="660" Margin="8 8 0 8">
-                        <TextBlock Text="请选择跑分文件：" />
+                        <TextBlock x:Uid="SelectScoreFile" />
                         <ComboBox x:Name="FileComboBox"
                                 DisplayMemberPath="Name"
                                 SelectedValuePath="FullName"
                                 SelectionChanged="SelectionChanged"
-                                PlaceholderText="文件不存在，请先测试"
+                                x:Uid="SelectFilePlaceholder"
                                 Width="400"
                                 HorizontalAlignment="Left"  Margin="0 8 0 0" />
                         <SelectorBar x:Name="SelectorBar" SelectionChanged="selecterBar_SelectionChanged" Visibility="Collapsed">
-                            <SelectorBarItem x:Name="Friendly" Text="可视化" IsSelected="True" />
-                            <SelectorBarItem x:Name="SourceCode" Text="源码" />
+                            <SelectorBarItem x:Name="Friendly" x:Uid="Visualized" IsSelected="True" />
+                            <SelectorBarItem x:Name="SourceCode" x:Uid="SourceCode" />
                         </SelectorBar>
 
-                        <InfoBar x:Name="LoadingFileErrorBar" Severity="Error" IsOpen="False"  Message="文件已经不存在。" Title="加载时出现错误">
+                        <InfoBar x:Name="LoadingFileErrorBar" Severity="Error" IsOpen="False"  x:Uid="LoadFileErrorTitle">
                             <InfoBar.ActionButton>
                                 <Button 
-                                    Content="刷新"
+                                    x:Uid="RefreshXAML"
                                     Click="RefreshFileButton_Click"
                                 />
                             </InfoBar.ActionButton>
                         </InfoBar>
-                        <InfoBar x:Name="LoadingSignalErrorBar" Severity="Error" Message="" Title="加载符号时出现错误" />
+                        <InfoBar x:Name="LoadingSignalErrorBar" Severity="Error" x:Uid="LoadSymbolErrorTitle" />
                         <StackPanel x:Name="LoadingPanel" Orientation="Horizontal" Spacing="16" Visibility="Collapsed">
                             <ProgressRing x:Name="LoadingRing" />
-                            <TextBlock Text="正在加载" Margin="0 8 0 0" />
+                            <TextBlock x:Uid="Loading" Margin="0 8 0 0" />
                         </StackPanel>
                         <ScrollViewer x:Name="HighlightBlockBackground" Grid.Row="3" VerticalScrollBarVisibility="Auto" 
                               HorizontalScrollBarVisibility="Auto" MinHeight="100" MaxHeight="800" Width="650"
-                              BorderBrush="#444444" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" 
+                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
                               CornerRadius="{StaticResource ControlCornerRadius}" Margin="0 4 0 0" Visibility="Collapsed"
                         >
                             <!-- 背景和前景由代码动态设置，以适应主题 -->
                             <RichTextBlock 
                                 x:Name="HighlightBlock" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
                                 FontFamily="Consolas" FontSize="14"
-                                IsTextSelectionEnabled="True"/>
+                                IsTextSelectionEnabled="True" />
                         </ScrollViewer>
                         <ScrollViewer
                             Margin="0 4 0 4"
+                            Padding="0 0 0 8"
                             CornerRadius="{StaticResource ControlCornerRadius}"
-                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                             MinHeight="200"
                             MaxHeight="1000"
                             Width="650"
-                            HorizontalScrollBarVisibility="Disabled"
+                            HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Auto"
                             x:Name="FriendlyBackground"
                             Visibility="Collapsed"
@@ -168,28 +164,28 @@
 
                         </ScrollViewer>
                         <StackPanel Spacing="12" HorizontalAlignment="Right" Orientation="Horizontal"  Margin="0 8 0 0" >
-                            <TextBlock Text="你不能删除此文件，因为最新版本的配置文件删除后会出现问题。" Margin="0 8 0 0" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-                            <Button>
+                            <TextBlock x:Name="LatestWarning" x:Uid="LatestFileWarning" Margin="0 8 0 0" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                            <Button x:Name="RemoveButton">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon Glyph="&#xE74D;"
                                       Margin="0,0,8,0" />
-                                    <TextBlock Text="删除" VerticalAlignment="Center" />
+                                    <TextBlock x:Uid="Delete" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <Button.Flyout>
                                     <Flyout>
                                         <StackPanel>
-                                            <TextBlock Style="{ThemeResource BaseTextBlockStyle}" Text="是否删除该配置文件，删除后不可恢复！" Margin="0,0,0,12" />
-                                            <Button Content="是的，我同意删除。" />
+                                            <TextBlock Style="{ThemeResource BaseTextBlockStyle}" x:Uid="DeleteConfirmText" Margin="0,0,0,12" />
+                                            <Button Click="DeleteFile" x:Uid="DeleteConfirmButton" />
                                         </StackPanel>
                                     </Flyout>
                                 </Button.Flyout>
                             </Button>
                         </StackPanel>
                         <StackPanel Spacing="12" HorizontalAlignment="Right" Orientation="Horizontal"  Margin="0 8 0 0" >
-                            <TextBlock x:Name="RefreshedFile" Visibility="Collapsed" Text="刷新完成！" Margin="0 8 0 0" />
+                            <TextBlock x:Name="RefreshedFile" Visibility="Collapsed" x:Uid="RefreshComplete" Margin="0 8 0 0" />
                             <Button 
                                     x:Name="RefreshFileButton" 
-                                    Content="刷新"
+                                    x:Uid="RefreshXAML"
                                     Click="RefreshFileButton_Click"
                                 />
                         </StackPanel>

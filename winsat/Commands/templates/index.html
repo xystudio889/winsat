@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png"
+        href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAMsAAADLAAShkWtsAAARsSURBVHhe7ZvNa1xVGMaf50ycZtKkUQIJ1q60JCDShQgFF0pXmuJOxI0IFYlRaUHyB4SA4ge1Cy2S2kUW3agLd1qpRbvqxnaloiEGoRU1NaFFkwlNZs7jYpKQnrkowcx5R+b9wbM57x14Ob85535wL5Hw2sV433odYySelDgCaB9Jpsc5/44kAfqT5KyEL1jH2fePhl+2H7M1sZNSWLqgCQBTJCvbD3J2B0GrECYHLvPdqSlGbAp45hOVhvp1luSx9EfO7iNpZuAyX5yaYgwAMNSvCZ/8fJA8tvSoJgCAx7+OB7CGOZDd6YFOK1G1K2A4xHWM+eRbwJ5aDeOB4NG05ORBgaMB0HBacDIhDQcKvem4kwcCvTx+QUoLFhDAvhLQze13J7tHFLASgWpMK7bwxJf2Au4vA4cqQiWkld1nsQZcqRI362nFBp64aCvgoW7gwe68LdQFXFomltpAQiABq/SXgJE9QlRji8gVAni4IoSCnnLHVMCBshAB1A3SW2r8AdKecsdUQE8AIuzS2+kCgMZ+bBWiuafcMRWggq0hZ0A19ZQ7pgIaW4HMooKecsdUgNC8LeQMOn0LSk+KuYOCnnLHVIDYvC/njDp+BRTcJOWMrwDjFdDx5wBtbANWaYsV0LgbMUrBpORMUz8GMV0B2NiGrIKCnnLHXIAlRHNPuWMrAIBAs4Bs6il3zAVYkvZjEVsBBftyznT8OUBsvjLJmXZYBaYCrEn7sYi5gPRfmTMdvwWlNyUWSXvKHVMB5ueAgp6y543v7d4L6ltvxIob3UAtw8tg/4TpCljt2vgnGrAWgHobvBXBN3+wWwEA0FMD+m6no60lErhZAWpMK/nh27O2AgCgXAP2rgGlzYf0LWStC1jeAzQ+zrKH78zZC9gkCGALu4mbd8BtBE/+1D4COhGenI81kqW04LQeSXWe+jn+TnIoLTqtR9JCYMDVpksjT54EXOV71+NzAM+ldpzWI+h5Tn6n8kC/viXpX0vmRPqxvMBDBIDTv8XDEC4B/sF2HrRK4PFX94dvtq6KP/g1jor4mGDfnQc7u4mkvwg8+8r+cB4bD2W3OL0QD5aAU5CeAkOb3bL831EE8BmIiZcHw9zmaOEkTy/EBwiMihoBaPkh92EAg+ngDlkB8FU6mJFlCbPE7fPjQ5X5tFgooF2Y/iN+TnA0Hd8JkubHB8PBdLxdaJNHUp2LCzDGBRjjAoxxAca4AGNcgDEuwBgXYIwLMMYFGOMCjHEBxrgAY1yAMS7AGBdgjAswxgUY4wKMcQHGuABjXIAxLsAYF2CMCzDGBRjjAoxxAca4AGNcgDEuwBgXYIwLMMYFGLP1jdj0jeV7yb39d5at0RmAj6WjO0HQNYJPpOOmlFB96R5cBymeW4z7Vur4iOG/fQzn7BDpCtb5dKgKr/vkG0A+orv0YQBwJK052TgSBJTTUScPJMt+FWSMCzAmULiVDjp5kOKtQGImLTiZIGcIiWcWNQbgBQF3p8c4LaEK4VNe41t/AxoVAtR3odLLAAAAAElFTkSuQmCC">
+    <title>Windows 体验指数结果</title>
+
+    <style>
+        * {
+            /* 参数 */
+
+            /* 字 */
+            --light-text: #1a1a1a;
+            --dark-text: #ffffff;
+            --text: var(--light-text);
+            --reverse-text: var(--dark-text);
+            --active-text: #5c5c5c;
+
+            --bg: #f9f9f9;
+            --header: #f3f3f3;
+            --translation: background-color .25s ease;
+            --grid-color: #d1d1d1;
+            --accent: #0078d1;
+
+            /* 下拉颜色参数 */
+            --dd-bg: #fefefe;
+            --dd-bg-hover: #fbfbfb;
+            --dd-bg-active: #fcfcfc;
+            --dd-border: #eeeeee;
+            --dd-border-bottom: #d4d4d4;
+            --dd-arrow-color: #606060;
+
+            /* 下拉窗口 / 列表项颜色参数（深色稍后再补） */
+            --dd-menu-bg: #f8f8f8;
+            --dd-item-bg: #f8f8f8;
+            --dd-item-hover: #f0f0f0;
+            --dd-item-active: #f3f3f3;
+            --dd-item-selected: #f0f0f0;
+            --dd-item-selected-active: #f3f3f3;
+
+            /* 下拉框 */
+            --ex-header: #fdfdfd;
+            --ex-border: #eaeaea;
+            --ex-bg: #f7f7f7;
+            --ex-main: #fdfdfd;
+            --ex-btn-hover: #f4f4f4;
+            --ex-btn-active: #f7f7f7;
+
+            /* 信息卡 */
+            --content-card-bg: #fdfdfd;
+        }
+
+        .dark * {
+            /* 参数 */
+            --text: var(--dark-text);
+            --reverse-text: var(--light-text);
+            --active-text: #d2d2d2;
+
+            --bg: #272727;
+            --header: #202020;
+            --grid-color: #3b3b3b;
+            --accent: #4cc2ff;
+
+            /* 下拉颜色参数 */
+            --dd-bg: #3e3e3e;
+            --dd-bg-hover: #444444;
+            --dd-bg-active: #393939;
+            --dd-border: #414141;
+            --dd-border-bottom: #414141;
+            --dd-arrow-color: #cecece;
+
+            /* 下拉窗口 / 列表项颜色参数（深色稍后再补） */
+            --dd-menu-bg: #2e2e2e;
+            --dd-item-bg: #2e2e2e;
+            --dd-item-hover: #3a3a3a;
+            --dd-item-active: #363636;
+            --dd-item-selected: #3c3c3c;
+            --dd-item-selected-active: #3a3a3a;
+
+            /* 下拉框 */
+            --ex-header: #323232;
+            --ex-border: #232323;
+            --ex-bg: #2e2e2e;
+            --ex-main: #393939;
+            --ex-btn-hover: #3e3e3e;
+            --ex-btn-active: #3a3a3a;
+
+            /* 信息卡 */
+            --content-card-bg: #393939;
+        }
+
+        * {
+            padding: 0;
+            color: var(--text);
+            font-family: "Segoe UI", "ContentFont", "Microsoft YaHei", "微软雅黑", sans-serif;
+            font-size: 14px;
+
+            /* 兼容性 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            transition: var(--translation);
+        }
+
+        /* ===== 1. 拉丁字符（英文/数字/半角标点）：使用加粗的 Segoe UI ===== */
+        @font-face {
+            font-family: "TitleFont";
+            src: local("Segoe UI Semibold"),
+                local("Segoe UI Bold"),
+                local("Segoe UI");
+            font-style: normal;
+            unicode-range:
+                U+0000-007F,
+                U+00A0-024F,
+                U+1E00-1EFF,
+                U+2000-206F,
+                U+20A0-20CF,
+                U+2100-214F;
+        }
+
+        /* ===== 2. 中文及全角标点：使用常规（不加粗）微软雅黑 ===== */
+        @font-face {
+            font-family: "TitleFont";
+            src: local("Microsoft YaHei"),
+                local("微软雅黑"),
+                local("MSYH"),
+                local("PingFang SC");
+            font-weight: 400;
+            font-style: normal;
+            unicode-range:
+                U+2E80-2EFF,
+                U+3000-303F,
+                U+3040-30FF,
+                U+3100-312F,
+                U+3200-32FF,
+                U+3400-4DBF,
+                U+4E00-9FFF,
+                U+F900-FAFF,
+                U+FE30-FE4F,
+                U+FF00-FFEF;
+        }
+
+        /* ===== 1. 拉丁字符（英文/数字/半角标点）：使用加粗的 Segoe UI ===== */
+        @font-face {
+            font-family: "ContentFont";
+            src: local("Segoe UI"),
+                local("Microsoft YaHei"),
+                local("微软雅黑"),
+                local("MSYH"),
+                local("PingFang SC");
+            font-style: normal;
+            unicode-range:
+                U+0000-007F,
+                U+00A0-024F,
+                U+1E00-1EFF,
+                U+2000-206F,
+                U+20A0-20CF,
+                U+2100-214F;
+        }
+
+        .title {
+            font-family: "TitleFont", "Segoe UI", "Microsoft YaHei", "微软雅黑", sans-serif;
+            font-weight: 400;
+            font-size: 28px;
+            margin: 0 0 32px 0;
+        }
+
+        .grid {
+            display: grid;
+            margin: 8px 0;
+            grid-template-columns: 140px 320px 130px 210px;
+            /*
+             * 行定义：
+             *  1) 3px  —— 标题上方的分隔线
+             *  2) 32px —— 标题行（夹在两条线之间，两条线间隔 32px）
+             *  3) 15px —— 标题下方的分隔线(3px) + 与表格内容之间的 12px 间隔
+             *  4~8) 30px —— 表格内容行
+             */
+            grid-template-rows: 3px 32px 4px repeat(5, 30px);
+            align-items: center;
+        }
+
+        .content {
+            display: flex;
+            gap: 4px;
+            flex-direction: column;
+
+            padding: 28px 0 0 36px;
+            height: 100%;
+        }
+
+        .grid-line {
+            width: 810px;
+            height: 3px;
+            background-color: var(--grid-color);
+            grid-column: 1 / -1;
+
+            /* 线始终贴在所在行的顶部，下方多出的 12px 即为线与内容的间隔 */
+            align-self: start;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .card-background {
+            display: flex;
+            flex-direction: column;
+
+            align-items: center;
+            grid-column: 4 / 5;
+            grid-row: 4 / -1;
+            justify-self: center;
+            align-self: center;
+            text-align: center;
+        }
+
+        .card {
+            width: 48px;
+            height: 48px;
+            display: flex;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            margin: 5px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            background-color: var(--accent);
+            border-radius: 8px;
+            color: var(--reverse-text);
+        }
+
+        .fonticon {
+            font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+            font-size: 16px;
+            color: #282828;
+        }
+
+        .dark .fonticon {
+            color: #ffffff;
+        }
+
+        .title-text {
+            font-size: 13px;
+        }
+
+        .header {
+            width: max(calc(100vw - 18px), 850px);
+            /* 取最大值，保证内容在不同屏幕尺寸下都能居中显示 */
+            height: 48px;
+            background-color: var(--header);
+
+            padding: 0 4px 0 14px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 16px;
+
+            transition: var(--translation);
+        }
+
+        /* 左侧组：内部两个组件靠左排列 */
+        .header-item {
+            display: flex;
+            /* 组内也用 flex 横向排列 */
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            /* 组件之间的间距 */
+        }
+
+        .item-right {
+            gap: 40px;
+            margin-right: 4px;
+        }
+
+        .right-subitem {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            gap: 16px;
+        }
+
+        /* ==========================================================
+         * 下拉框 + 弹出窗口（浅色；窗口无边框，靠阴影分层）
+         *
+         * 按钮：<15px><文字><16px><箭头><15px>
+         *       宽度由内容撑开 → 选中项变化时自动重算；
+         *       左对齐 → 宽度变化表现为向右扩展
+         * 窗口：四周 6px 留白、项间 4px、文字居左 15px
+         *       左侧与按钮左对齐，竖直方向以「当前选中项」为中心并
+         *       对准按钮中心；打开时从中心向上下非线性扩张
+         * ========================================================== */
+
+        /* 定位容器：宽度 = 按钮宽度；左对齐 → 变宽时向右扩展
+         * （想要右对齐、变宽向左扩展：加一行 margin-left: auto，
+         *   并把外层容器的 align-items 改成 flex-end） */
+        .dropdown-host {
+            position: relative;
+            display: flex;
+            width: fit-content;
+        }
+
+        .dropdown {
+            display: inline-flex;
+            align-items: center;
+            box-sizing: border-box;
+
+            /* 宽度 = 15 + 文字 + 16 + 箭头 + 15（随内容自动计算） */
+            width: fit-content;
+            /* 上下 5px（与列表项一致）；高度 = 12 + 行高 20 + 12 */
+            padding: 5px 10px;
+            line-height: 20px;
+
+            text-align: left;
+            background-color: var(--dd-bg);
+            border: 1px solid var(--dd-border);
+            border-bottom-color: var(--dd-border-bottom);
+            border-radius: 4px;
+
+            appearance: none;
+            -webkit-appearance: none;
+
+            transition: background-color .1s ease, border-color .1s ease;
+        }
+
+        /* 按下：换背景，并把下边框提亮为普通边框色 */
+        .dropdown:active {
+            background-color: var(--dd-bg-active);
+            border-bottom-color: var(--dd-border);
+        }
+
+        .dropdown:active .dropdown-text {
+            color: var(--active-text);
+        }
+
+        .dropdown:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+
+        /* 文字：宽度随内容（不换行、不省略） */
+        .dropdown-text {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        /* 箭头：fonticon &#xE70D;（ChevronDown），与文字间隔 16px */
+        .dropdown-arrow {
+            flex: 0 0 auto;
+            width: 12px;
+            margin-left: 16px;
+
+            font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            color: var(--dd-arrow-color);
+
+            pointer-events: none;
+
+            /* 松开时回弹（弹性曲线） */
+            transition: transform .3s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        /* 按下：箭头立刻下移 2px */
+        .dropdown:active .dropdown-arrow {
+            transform: translateY(2px);
+            transition: none;
+        }
+
+        /* ---------------- 弹出窗口 ---------------- */
+        .dd-popup {
+            /* 四周留白；关闭态竖直留白为 0，块才能真收缩到高度 0 */
+            --dd-pad: 6px;
+
+            position: absolute;
+            z-index: 10;
+
+            /* 左侧与按钮左对齐；竖直中心先对准按钮中心 */
+            left: 0;
+            top: 50%;
+
+            box-sizing: border-box;
+            width: var(--dd-menu-w, 200px);
+            /* 最小宽度 = 定位容器（.dropdown-host）宽度，即下拉框宽度：
+             * 窗口算出来比下拉框窄时，强制撑到下拉框的宽度 */
+            min-width: 100%;
+            padding: 0 var(--dd-pad);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            border-radius: 8px;
+            background-color: var(--dd-menu-bg);
+            overflow: hidden;
+
+            /* 关闭态：高度 0、阴影全透明，整体收在按钮中心那一点 */
+            max-height: 0;
+            transform: translateY(0);
+            pointer-events: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0), 0 2px 6px rgba(0, 0, 0, 0);
+
+            /* 关闭时（移除 .open）：快速收回 */
+            transition:
+                max-height .2s ease,
+                transform .2s ease,
+                padding .2s ease;
+        }
+
+        /* 打开动画（总 1.5s，0.5s 对应 33.333%）：
+         *   0    ~ 0.5s ：弹出到 90%
+         *   0.5s ~ 1.5s ：从 90% 平滑减速到 100%
+         */
+        @keyframes dd-menu-open {
+            0% {
+                max-height: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                transform: translateY(0);
+                /* 第一段：快出，末尾稍微减速 */
+                animation-timing-function: cubic-bezier(.33, 1, .68, 1);
+            }
+
+            20% {
+                max-height: calc(var(--dd-menu-h) * .85);
+                padding-top: calc(var(--dd-pad) * .85);
+                padding-bottom: calc(var(--dd-pad) * .85);
+                transform: translateY(calc(var(--dd-sel-center) * -.85 + var(--dd-shift, 0px) * .85));
+                /* 第二段：强减速，缓缓贴上终点 */
+                animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+            }
+
+            45% {
+                max-height: calc(var(--dd-menu-h) * .93);
+                padding-top: calc(var(--dd-pad) * .93);
+                padding-bottom: calc(var(--dd-pad) * .93);
+                transform: translateY(calc(var(--dd-sel-center) * -.93 + var(--dd-shift, 0px) * .93));
+                /* 第二段：弱减速，缓缓贴上终点 */
+                animation-timing-function: cubic-bezier(.09, 1, .22, 1);
+            }
+
+            100% {
+                max-height: var(--dd-menu-h);
+                padding-top: var(--dd-pad);
+                padding-bottom: var(--dd-pad);
+                transform: translateY(calc(var(--dd-sel-center) * -1 + var(--dd-shift, 0px)));
+            }
+        }
+
+        /* 收起动画：从终态快速收回（JS 加 .closing，结束后移除） */
+        @keyframes dd-menu-close {
+            0% {
+                max-height: var(--dd-menu-h);
+                padding-top: var(--dd-pad);
+                padding-bottom: var(--dd-pad);
+                transform: translateY(calc(var(--dd-sel-center) * -1));
+            }
+
+            100% {
+                max-height: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                transform: translateY(0);
+            }
+        }
+
+        /* 打开态：撑满高度，并上移「选中项中心到窗口顶部的距离」 */
+        .dd-popup.open {
+            padding: var(--dd-pad);
+            transform: translateY(calc(-1 * var(--dd-sel-center, 0px) + var(--dd-shift, 0px)));
+            pointer-events: auto;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .14), 0 2px 6px rgba(0, 0, 0, .10);
+
+            /* 展开由关键帧驱动；过渡列表沿用基态，负责关闭时收回 */
+            animation: dd-menu-open .4s forwards;
+        }
+
+        /* 3 秒强制到位时临时取消过渡 */
+        .dd-popup.no-anim {
+            transition: none;
+        }
+
+        /* ---------------- 列表项 ---------------- */
+        .dd-item {
+            /* 指示器的定位基准 */
+            position: relative;
+            box-sizing: border-box;
+            /* 不被窗口高度压缩（窗口从 0 展开时高度会小于内容高） */
+            flex: 0 0 auto;
+            /* 上下 5px（与下拉框一致），文字居左 15px */
+            padding: 5px 15px;
+            line-height: 20px;
+            white-space: nowrap;
+            border-radius: 4px;
+
+            background-color: var(--dd-item-bg);
+            color: var(--text);
+            cursor: default;
+
+            transition: background-color .08s ease, color .08s ease;
+        }
+
+        /* 选中：背景 #f3f3f3 */
+        .dd-item.selected {
+            background-color: var(--dd-item-selected);
+        }
+
+        /* 悬浮：背景 #f0f0f0 */
+        .dd-item:hover {
+            background-color: var(--dd-item-hover);
+        }
+
+        /* 按下：背景 #f3f3f3，字体 #5c5c5c */
+        .dd-item:active {
+            background-color: var(--dd-item-active);
+            color: var(--active-text);
+        }
+
+        /* 选中 + 按下：背景 #f0f0f0，字体 #5c5c5c */
+        .dd-item.selected:active {
+            background-color: var(--dd-item-selected-active);
+            color: var(--active-text);
+        }
+
+        /* 选中项左侧指示器：accent 色、2×16、椭圆。
+         * 绝对定位 → 不占位，有/无指示器的项文字位置完全一致（仍居左 15px） */
+        .dd-item::before {
+            content: "";
+            position: absolute;
+            /* 左侧与选项（灰色圆角方块）左边缘对齐 */
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 4px;
+            height: 16px;
+            border-radius: 2px;
+            background-color: var(--accent);
+
+            opacity: 0;
+
+            /* 按下选中项时线性缩小 16px → 4px，0.5s */
+            transition: height .125s linear, opacity .1s ease;
+        }
+
+        .dd-item.selected::before {
+            opacity: 1;
+        }
+
+        .dd-item.selected:active::before {
+            height: 10px;
+        }
+
+
+        /* 下方显示当前选中内容的文字 */
+        .selected-line {
+            line-height: 20px;
+            white-space: nowrap;
+        }
+
+        .selected-line .selected-value {
+            color: var(--accent);
+        }
+
+        /* 下拉框 */
+        .expander {
+            background-color: var(--ex-bg);
+            width: 678px;
+
+            border: 1px solid var(--ex-border);
+            border-radius: 8px;
+            /* 让标题的背景被圆角裁掉 */
+            overflow: hidden;
+        }
+
+        /* 标题：整行都是「展开/收起」的点击区 */
+        .expander-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+
+            background-color: var(--ex-header);
+            border-bottom: 1px solid var(--ex-border);
+
+            gap: 16px;
+            padding: 0 8px 0 12px;
+            height: 46px;
+
+            cursor: pointer;
+
+            transition: background-color .1s ease;
+        }
+
+        .expander-header:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        .expander-fonticon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            width: 32px;
+            height: 32px;
+
+            color: var(--text);
+
+            font-size: 11px;
+
+            /* 箭头原地转 180°，固定 250ms；
+             * 延迟 250ms ⇒ 等展开/收起动画（.expander-content 的 height）走完再开始转。
+             * 关闭 → 打开：0° → 180°，顺时针，箭头朝上；
+             * 打开 → 关闭：180° → 0°，逆时针，箭头朝下。 */
+            transition: transform .25s ease .25s, background-color .1s ease;
+        }
+
+        .expander-bg {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+        }
+
+        /* 打开态：转到 180°（朝上） */
+        .expander.open .expander-fonticon {
+            transform: rotate(180deg);
+        }
+
+        .expander-header:hover>.expander-bg {
+            background-color: var(--ex-btn-hover);
+        }
+
+        .expander-header:active>.expander-bg {
+            background-color: var(--ex-btn-active);
+        }
+
+        /* 内容：默认收起（高度 0）。
+         * 裁剪盒自身不带内边距，高度在「0 ↔ 内容自然高度」之间用像素值过渡
+         * （展开后的像素值由脚本写入，过渡结束后交还给 auto），固定 250ms。 */
+        .expander-content {
+            box-sizing: border-box;
+
+            height: 0;
+            overflow: hidden;
+
+            transition: height .25s ease;
+        }
+
+        /* 内边距放在内层：收起时随内容一起被裁掉，不会残留 24px 的空档 */
+        .expander-body {
+            padding: 12px 8px;
+        }
+
+        .content-card {
+            background-color: var(--content-card-bg);
+
+            display: grid;
+
+            /* 横向：三列平分剩余宽度 */
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0 32px;
+
+            /* 竖向：行高由文字自身撑开，不平分 */
+            grid-auto-rows: auto;
+
+            /* 整组内容靠左上 */
+            justify-content: start;
+            align-content: start;
+
+            min-height: 200px;
+            /* 最小高度 300px */
+            max-height: 1000px;
+            /* 最大高度 1000px */
+
+            border-radius: 8px;
+            padding: 12px 8px;
+            overflow: auto;
+        }
+
+        /* ---- 语言卡片：只显示与当前界面语言匹配的那一张 ----
+         * 中文（zh-CN）→ 中文卡片；英语及其它任何语言 → English 卡片。
+         * 依据 <html lang="...">（由语言下拉框的 translate() 写入；
+         * 页面默认 lang="zh-CN"，脚本执行前也不会出现两张同时显示的闪烁）。 */
+        .content-card[data-locale] {
+            display: none;
+        }
+
+        html[lang="zh-CN"] .content-card[data-locale="zh-CN"],
+        html:not([lang="zh-CN"]) .content-card[data-locale="en-US"] {
+            display: grid;
+        }
+
+        .content-text {
+            white-space: nowrap;
+            margin-bottom: 8px;
+        }
+
+        .big-line {
+            grid-column: 1 / -1;
+
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+
+            margin-bottom: 14px;
+        }
+
+        .line-text {
+            flex: 0 0 144px;
+
+            font-size: 16px;
+            font-weight: Bold;
+        }
+
+
+        .content-line {
+            /* 线 */
+            flex: 1 1 auto;
+            background-color: var(--accent);
+
+            /* 高度 */
+            height: 4px;
+            align-self: center;
+            /* 对齐中间 */
+        }
+
+        .spacing {
+            grid-column: 1 / -1;
+            margin-top: 8px;
+        }
+
+        .subline {
+            grid-column: 1 / -1;
+            margin: 4px 0 12px 0;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* ========== 容器 ========== */
+        .content-card {
+            overflow: auto;
+            /* 预留滚动条槽位，避免出现/隐藏时内容抖动（可选） */
+            scrollbar-gutter: stable;
+        }
+
+        /* ========== 滚动条本体：默认 2px，横竖都管 ========== */
+        .content-card::-webkit-scrollbar {
+            width: 2px;
+            height: 2px;
+            /* 宽度/高度过渡：滚动条放大动画 */
+            transition: width 0.25s ease, height 0.25s ease;
+        }
+
+        /* ========== 轨道：默认透明，hover 时渐显 ========== */
+        .content-card::-webkit-scrollbar-track {
+            background-color: transparent;
+            transition: background-color 0.25s ease;
+        }
+
+        /* ========== 滑块 ========== */
+        .content-card::-webkit-scrollbar-thumb {
+            background-color: #a0a0a0;
+            border-radius: 999px;
+        }
+
+        /* ========== 箭头按钮（上下 + 左右） ========== */
+        .content-card::-webkit-scrollbar-button {
+            display: block;
+            background-color: transparent;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0;
+            transition: opacity 0.25s ease, background-color 0.25s ease;
+        }
+
+        /* --- 竖直方向：上下箭头 --- */
+        .content-card::-webkit-scrollbar-button:vertical {
+            height: 8px;
+            width: 100%;
+        }
+
+        .content-card::-webkit-scrollbar-button:vertical:decrement {
+            /* 上箭头 */
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 2L9 7H1z' fill='%23a0a0a0'/></svg>");
+        }
+
+        .content-card::-webkit-scrollbar-button:vertical:increment {
+            /* 下箭头 */
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 8L1 3h8z' fill='%23a0a0a0'/></svg>");
+        }
+
+        /* --- 水平方向：左右箭头 --- */
+        .content-card::-webkit-scrollbar-button:horizontal {
+            width: 8px;
+            height: 100%;
+        }
+
+        .content-card::-webkit-scrollbar-button:horizontal:decrement {
+            /* 左箭头 */
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M2 5l5-4v8z' fill='%23a0a0a0'/></svg>");
+        }
+
+        .content-card::-webkit-scrollbar-button:horizontal:increment {
+            /* 右箭头 */
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M8 5L3 1v8z' fill='%23a0a0a0'/></svg>");
+        }
+
+        /* ========== 横竖交汇角 ========== */
+        .content-card::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+
+        /* ========== 悬停状态：全部联动 ========== */
+        /* 滚动条变粗 2px → 4px */
+        .content-card:hover::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        /* 轨道渐显为 #303030 */
+        .content-card:hover::-webkit-scrollbar-track {
+            background-color: #303030;
+        }
+
+        /* 箭头渐显，且底色与轨道一致，视觉连贯 */
+        .content-card:hover::-webkit-scrollbar-button {
+            opacity: 1;
+            background-color: #303030;
+        }
+    </style>
+
+    <!-- 预加载 -->
+    <script>
+        (function () {
+            try {
+                var mode = localStorage.getItem('theme') || 'system';
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
+                document.documentElement.classList.toggle('dark', isDark);
+            } catch (e) { }
+        })();
+    </script>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-item item-left">
+            <div class="fonticon">&#xE7F8;</div>
+            <div class="title-text" data-i18n="ExportTitle">Windows 体验指数导出</div>
+            <div class="spacing"></div>
+        </div>
+        <div class="header-item item-right">
+            <div class="right-subitem">
+                <div class="right-subitem" style="gap: 8px">
+                    <div class="fonticon">&#xE790;</div>
+                    <span data-i18n="Appearance">主题: </span>
+                </div>
+                <!-- 第一个下拉框：主题选择（使用系统设置 / 浅色 / 深色） -->
+                <div class="dropdown-host" id="themeDropdown">
+                    <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox"
+                        aria-expanded="false">
+                        <span class="dropdown-text">使用系统设置</span>
+                        <span class="dropdown-arrow" aria-hidden="true">&#xE70D;</span>
+                    </button>
+
+                    <div class="dd-popup" role="listbox" aria-label="软件主题" data-i18n-aria="AppTheme">
+                        <div class="dd-item selected" role="option" aria-selected="true" data-value="system"
+                            data-i18n="SystemTheme">使用系统设置</div>
+                        <div class="dd-item" role="option" aria-selected="false" data-value="light"
+                            data-i18n="LightTheme">
+                            浅色
+                        </div>
+                        <div class="dd-item" role="option" aria-selected="false" data-value="dark"
+                            data-i18n="DarkTheme">深色
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 第二个下拉框：语言选择（使用系统设置 / 简体中文 / English）；
+        data-value 用 BCP-47 标记，system = 跟随浏览器语言 -->
+            <div class="right-subitem">
+                <div class="right-subitem" style="gap: 8px">
+                    <div class="fonticon">&#xF2B7;</div>
+                    <span>Language: </span>
+                </div>
+                <div class="dropdown-host" id="langDropdown">
+                    <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox"
+                        aria-expanded="false">
+                        <span class="dropdown-text">Use System Setting</span>
+                        <span class="dropdown-arrow" aria-hidden="true">&#xE70D;</span>
+                    </button>
+
+                    <div class="dd-popup" role="listbox" aria-label="语言" data-i18n-aria="AppLanguage">
+                        <div class="dd-item selected" role="option" aria-selected="true" data-value="system">Use System
+                            Setting
+                        </div>
+                        <div class="dd-item" role="option" aria-selected="false" data-value="zh-CN">简体中文</div>
+                        <div class="dd-item" role="option" aria-selected="false" data-value="en-US">English</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <p class="title" data-i18n="ResultTitle">Windows 体验指数结果</p>
+    </div>
+
+    <script>
+        /* ============================================================
+         * 语言包：键名与 ../Strings/*.resw 完全一致（沿用 resw 的
+         * 「x:Uid.属性」命名），值抄自 zh-CN.resw / en-US.resw，
+         * 便于与应用资源对照、同步。
+         * ============================================================ */
+        const STRINGS = {
+            'zh-CN': {
+                'ExportTitle': 'Windows 体验指数导出',
+                'ResultTitle': 'Windows 体验指数结果',
+                'Component': '组件',
+                'ScoredItems': '评分的项目',
+                'SubScore': '子分数',
+                'BaseScore': '基本分数',
+                'Processor': '处理器:',
+                'CalcPerSecond': '每秒计算速度',
+                'MemoryRAM': '内存(RAM):',
+                'MemoryOps': '每秒内存运行速度',
+                'Graphics': '图形:',
+                'DesktopGraphics': '桌面图形性能',
+                'GamingGraphics': '游戏图形:',
+                'GamingGraphicsDesc': '3D 商务和游戏图形性能',
+                'PrimaryDisk': '主硬盘:',
+                'DiskTransferRate': '硬盘数据传输速率',
+                'subScoreTip': '由最低子分数决定',
+                'AppTheme': '软件主题',
+                'SystemTheme': '使用系统设置',
+                'LightTheme': '浅色',
+                'DarkTheme': '深色',
+                'AppLanguage': '语言',
+                "Appearance": '主题: ',
+                "Advanced": "高级信息"
+            },
+            'en-US': {
+                'ExportTitle': 'Windows Experience Index export',
+                'ResultTitle': 'Windows Experience Index results',
+                'Component': 'Component',
+                'ScoredItems': 'Rated item',
+                'SubScore': 'Sub-score',
+                'BaseScore': 'Base score',
+                'Processor': 'Processor:',
+                'CalcPerSecond': 'Calculations per second',
+                'MemoryRAM': 'Memory (RAM):',
+                'MemoryOps': 'Memory operations per second',
+                'Graphics': 'Graphics:',
+                'DesktopGraphics': 'Desktop graphics performance',
+                'GamingGraphics': 'Gaming graphics:',
+                'GamingGraphicsDesc': '3D business and gaming graphics performance',
+                'PrimaryDisk': 'Primary hard disk:',
+                'DiskTransferRate': 'Disk data transfer rate',
+                'subScoreTip': 'Decided by the lowest sub-score',
+                'AppTheme': 'Software theme',
+                'SystemTheme': 'Use system setting',
+                'LightTheme': 'Light',
+                'DarkTheme': 'Dark',
+                'AppLanguage': 'Language',
+                'SystemLanguage': 'Use system setting',
+                "Appearance": 'Appearance: ',
+                "Advanced": "Advanced information"
+            }
+        };
+
+        /* 所有下拉框实例：切换语言后统一刷新按钮文字与尺寸 */
+        const dropdowns = [];
+
+        function initDropdown(host, options) {
+            options = options || {};
+            const readout = options.readout || null;   // 跟随显示的“当前选中”元素
+            const onSelect = options.onSelect || null; // 选中回调（用户点击时触发）
+
+            const button = host.querySelector('.dropdown');
+            const label = button.querySelector('.dropdown-text');
+            const popup = host.querySelector('.dd-popup');
+            const items = Array.from(popup.querySelectorAll('.dd-item'));
+
+            const FORCE_END_MS = 3000;      // 3 秒后强制设为终点
+
+            /* 选项的值：优先 data-value，缺省用文字 */
+            const itemValue = (el) => el.dataset.value !== undefined ? el.dataset.value : el.textContent;
+
+            let isOpen = false;
+            let forceTimer = 0;
+
+            /* 量文字宽度用的隐藏元素（挂在窗口里以继承同样字体） */
+            const ruler = document.createElement('span');
+            ruler.style.cssText =
+                'position:absolute;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;';
+            popup.appendChild(ruler);
+
+            const textWidth = (el) => {
+                ruler.textContent = el.textContent;
+                return ruler.getBoundingClientRect().width;
+            };
+
+            /* 修正：整块窗口必须落在浏览器窗口内。
+             * 在动画开始前算好，直接作为动画终点（不是动画完再瞬移）：
+             *   上边超出 → 向下移；下边超出 → 向上移；窗口装不下时优先保证上边可见。 */
+            function applyShift(fullH, selCenter) {
+                const MARGIN = 8;
+                const hostRect = host.getBoundingClientRect();
+                const anchorY = hostRect.top + hostRect.height / 2;   // 按钮中心（视口坐标）
+                const minTop = MARGIN;
+                const maxTop = window.innerHeight - MARGIN - fullH;
+                let shift = 0;
+                if (maxTop < minTop) {
+                    shift = minTop - (anchorY - selCenter);           // 装不下：露出上边
+                } else {
+                    const top = Math.min(Math.max(anchorY - selCenter, minTop), maxTop);
+                    shift = top - (anchorY - selCenter);
+                }
+                popup.style.setProperty('--dd-shift', shift.toFixed(2) + 'px');
+            }
+
+            /* 重算窗口宽度/高度/位置：选中项变化、字体加载完、窗口缩放都要重算 */
+            function measure() {
+                const cs = getComputedStyle(popup);
+                /* 窗口四周留白（打开态的值，写死在 --dd-pad 里） */
+                const pad = parseFloat(cs.getPropertyValue('--dd-pad')) || 0;
+                const gap = parseFloat(cs.rowGap) || 0;
+
+                /* 没有任何选项：窗口完全由默认留白构成（pad × pad 的小方块） */
+                if (items.length === 0) {
+                    const box = pad * 2;
+                    popup.style.setProperty('--dd-menu-w', box + 'px');
+                    popup.style.setProperty('--dd-menu-h', box + 'px');
+                    popup.style.setProperty('--dd-sel-center', pad + 'px');  // 中心即留白中点
+                    applyShift(box, pad);
+                    return;
+                }
+
+                /* 窗口宽 = 最宽项（文字 + 左右各 15px）+ 18px */
+                let maxText = 0;
+                items.forEach(el => { maxText = Math.max(maxText, textWidth(el)); });
+                popup.style.setProperty('--dd-menu-w', (maxText + 30 + 18) + 'px');
+
+                /* 窗口完整高度 = 上下留白 + 各项高度 + 项间距 */
+                let contentH = 0;
+                items.forEach(el => { contentH += el.offsetHeight; });
+                const fullH = pad * 2 + contentH + gap * (items.length - 1);
+                popup.style.setProperty('--dd-menu-h', fullH + 'px');
+
+                /* 选中项中心到窗口顶部的距离 → 窗口按它上移，使选中项对准按钮中心 */
+                const index = Math.max(0, items.findIndex(el => el.classList.contains('selected')));
+                let above = 0;
+                for (let i = 0; i < index; i++) above += items[i].offsetHeight + gap;
+                const selCenter = pad + above + items[index].offsetHeight / 2;
+                popup.style.setProperty('--dd-sel-center', selCenter + 'px');
+
+                applyShift(fullH, selCenter);
+            }
+
+            function openMenu() {
+                if (isOpen) return;
+                measure();
+                isOpen = true;
+                popup.classList.add('open');
+                button.setAttribute('aria-expanded', 'true');
+
+                clearTimeout(forceTimer);
+                forceTimer = setTimeout(forceEnd, FORCE_END_MS);
+            }
+
+            /* 强制停在终点：关掉过渡与动画，直接落到 .open 的终态 */
+            function forceEnd() {
+                popup.classList.add('no-anim');
+                popup.style.animation = 'none';
+                /* 动画被移除后 forwards 的终态会一并失效，这里把终态写成内联值补上 */
+                popup.style.maxHeight = 'var(--dd-menu-h)';
+                popup.style.paddingTop = 'var(--dd-pad)';
+                popup.style.paddingBottom = 'var(--dd-pad)';
+                popup.style.transform =
+                    'translateY(calc(-1 * var(--dd-sel-center, 0px) + var(--dd-shift, 0px)))';
+                requestAnimationFrame(() => popup.classList.remove('no-anim'));
+            }
+
+            function closeMenu() {
+                if (!isOpen) return;
+                isOpen = false;
+                clearTimeout(forceTimer);
+                popup.classList.remove('no-anim');
+                popup.classList.remove('open');
+                popup.style.animation = '';      // 复位，下次打开重新播放动画
+                /* 清掉 forceEnd 写入的终点内联值，让基态（高度 0）重新接管 */
+                popup.style.maxHeight = '';
+                popup.style.paddingTop = '';
+                popup.style.paddingBottom = '';
+                popup.style.transform = '';
+                button.setAttribute('aria-expanded', 'false');
+            }
+
+            /* silent = true 时不触发 onSelect（用于外部同步选中项，避免回调递归） */
+            function select(index, silent) {
+                if (index < 0 || index >= items.length) return;   // 没有选项时无操作
+                items.forEach((el, i) => {
+                    el.classList.toggle('selected', i === index);
+                    el.setAttribute('aria-selected', i === index ? 'true' : 'false');
+                });
+                label.textContent = items[index].textContent;      // 按钮宽度随文字自动变化
+                if (readout) readout.textContent = items[index].textContent;
+                measure();                                        // 重新计算尺寸
+                if (!silent && onSelect) onSelect(itemValue(items[index]), index);
+            }
+
+            /* 按值选中（默认不触发回调） */
+            function selectByValue(value) {
+                const index = items.findIndex(el => itemValue(el) === value);
+                if (index >= 0) select(index, true);
+            }
+
+            button.addEventListener('click', () => {
+                if (isOpen) closeMenu(); else openMenu();
+            });
+
+            items.forEach((el, index) => {
+                el.addEventListener('click', () => { select(index); closeMenu(); });
+            });
+
+            /* 点别处 / Esc 关闭 */
+            document.addEventListener('mousedown', (e) => {
+                if (isOpen && !host.contains(e.target)) closeMenu();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeMenu();
+            });
+
+            window.addEventListener('resize', measure);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+            measure();
+
+            const api = {
+                select,
+                selectByValue,
+                close: closeMenu,
+                /* 选项文字被外部改动后（如切换语言）：
+                 * 按钮文字跟回选中项，并重算窗口尺寸 */
+                refresh() {
+                    const el = items.find(el => el.classList.contains('selected'));
+                    if (el) {
+                        label.textContent = el.textContent;
+                        if (readout) readout.textContent = el.textContent;
+                    }
+                    measure();
+                },
+                get value() {
+                    const el = items.find(el => el.classList.contains('selected'));
+                    return el ? itemValue(el) : null;
+                }
+            };
+
+            dropdowns.push(api);
+            return api;
+        }
+
+        /* ============ 主题：由第一个下拉框（#themeDropdown）控制 ============ */
+        (function () {
+            const KEY = 'theme';
+            const root = document.documentElement;
+            const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+            const readMode = () => {
+                try { return localStorage.getItem(KEY) || 'system'; } catch (e) { return 'system'; }
+            };
+            const saveMode = (m) => {
+                try { localStorage.setItem(KEY, m); } catch (e) { }
+            };
+
+            /* 某个模式下，最终是否显示深色 */
+            const isDark = (mode) => mode === 'dark' || (mode === 'system' && media.matches);
+
+            let dd = null;
+
+            function apply(mode, persist) {
+                root.classList.toggle('dark', isDark(mode));   // ← 核心就这一行
+                if (persist) saveMode(mode);
+                if (dd) dd.selectByValue(mode);                // 同步下拉框显示（不触发回调）
+            }
+
+            dd = initDropdown(document.getElementById('themeDropdown'), {
+                onSelect: (value) => apply(value, true)        // 用户点击选项
+            });
+
+            /* 系统外观变化时，如果当前是“根据系统”，实时跟随 */
+            const onSystemChange = () => {
+                if (readMode() === 'system') apply('system', false);
+            };
+            if (media.addEventListener) media.addEventListener('change', onSystemChange);
+            else if (media.addListener) media.addListener(onSystemChange);  // 老 Safari
+
+            /* 初始化（dark class 已在 head 里设好，这里同步下拉框 UI） */
+            apply(readMode(), false);
+        })();
+
+        /* ============ 其余下拉框：互不干扰，各自按需绑定“当前选中” ============ */
+        document.querySelectorAll('.dropdown-host').forEach((host) => {
+            if (host.id === 'themeDropdown' || host.id === 'langDropdown') return;  // 前两个已单独初始化
+            initDropdown(host);
+        });
+
+        /* ============ 语言：由第二个下拉框（#langDropdown）控制 ============
+         * 语言包（STRINGS）对应 Strings/zh-CN.resw、Strings/en-US.resw：
+         *   「使用系统设置」→ 跟随浏览器语言（navigator.languages）
+         *   「简体中文」/「English」→ 固定该语言
+         * 页面上的静态文字都带 data-i18n（键名 = resw 的键名），
+         * 无障碍标签用 data-i18n-aria；下拉框按钮文字由 refresh() 重新同步。 */
+        (function () {
+            const KEY = 'lang';
+            const SUPPORTED = ['zh-CN', 'en-US'];
+            const FALLBACK = 'en-US';
+
+            const readMode = () => {
+                try {
+                    const m = localStorage.getItem(KEY);
+                    return (m === 'system' || SUPPORTED.includes(m)) ? m : 'system';
+                } catch (e) { return 'system'; }
+            };
+            const saveMode = (m) => {
+                try { localStorage.setItem(KEY, m); } catch (e) { }
+            };
+
+            /* 系统语言 → 语言包：按 navigator.languages 顺序取第一个能认出的 */
+            function systemLang() {
+                const tags = (navigator.languages && navigator.languages.length)
+                    ? navigator.languages : [navigator.language || ''];
+                for (const tag of tags) {
+                    const t = String(tag).toLowerCase();
+                    if (t.startsWith('zh')) return 'zh-CN';
+                    if (t.startsWith('en')) return 'en-US';
+                }
+                return FALLBACK;
+            }
+
+            const langOf = (mode) => mode === 'system' ? systemLang() : mode;
+
+            /* 取词：当前语言缺键 → 回退到 FALLBACK → 再回退到键名本身 */
+            function t(key, lang) {
+                const dict = STRINGS[lang] || STRINGS[FALLBACK];
+                if (dict && key in dict) return dict[key];
+                return (STRINGS[FALLBACK] && STRINGS[FALLBACK][key]) || key;
+            }
+
+            /* 把 DOM 上所有 data-i18n / data-i18n-aria 的文字换成当前语言 */
+            function translate(lang) {
+                document.querySelectorAll('[data-i18n]').forEach((el) => {
+                    el.textContent = t(el.getAttribute('data-i18n'), lang);
+                });
+                document.querySelectorAll('[data-i18n-aria]').forEach((el) => {
+                    el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'), lang));
+                });
+                document.documentElement.lang = lang;           // 供 :lang() 与屏幕阅读器
+                document.title = t('ResultTitle', lang);   // 页签标题
+            }
+
+            let dd = null;
+
+            function apply(mode, persist) {
+                if (persist) saveMode(mode);
+                if (dd) dd.selectByValue(mode);         // 先定下选中的是哪一项
+                translate(langOf(mode));
+                dropdowns.forEach((d) => d.refresh());  // 按钮文字与窗口宽度跟随新语言
+            }
+
+            dd = initDropdown(document.getElementById('langDropdown'), {
+                onSelect: (value) => apply(value, true)         // 用户点击选项
+            });
+
+            /* 系统语言变化时，如果当前是「使用系统设置」，实时跟随 */
+            window.addEventListener('languagechange', () => {
+                if (readMode() === 'system') apply('system', false);
+            });
+
+            /* 初始化：HTML 里默认写的是中文，这里按存下来的选择覆盖 */
+            apply(readMode(), false);
+        })();
+    </script>
+
+    <script>
+        /* ============================================================
+         * Expander（可折叠面板）
+         *   1) 默认关闭；
+         *   2) 展开/收起固定 250ms，箭头原地转 180° 也是 250ms；
+         *   3) 箭头的 rotate 用 transition-delay 推迟 250ms 播放，
+         *      正好等展开/收起动画走完再转（见 .expander-fonticon）。
+         *
+         * 高度用「0px ↔ 内容自然高度」的像素值过渡：auto 无法过渡，
+         * 所以展开后 250ms 再把 height 交还给 auto（内容变化时能自动撑开），
+         * 收起前先把它固定回像素值，保证每次都从当前高度开始收。
+         * ============================================================ */
+        (function () {
+            const DURATION = 250;   // 与 CSS 中 .expander-content 的过渡时长一致
+
+            document.querySelectorAll('.expander').forEach((el) => {
+                const header = el.querySelector('.expander-header');
+                const content = el.querySelector('.expander-content');
+                if (!header || !content) return;
+
+                let isOpen = false;
+                let settleTimer = 0;
+
+                /* 收起态就是 HTML 的默认态：没有 .open，height 由 CSS 定为 0 */
+                header.setAttribute('role', 'button');
+                header.setAttribute('tabindex', '0');
+                header.setAttribute('aria-expanded', 'false');
+
+                function expand() {
+                    if (isOpen) return;
+                    isOpen = true;
+                    clearTimeout(settleTimer);
+
+                    /* 先加 .open：箭头开始计时（延迟 250ms），内边距也由 .expander-body 撑开 */
+                    el.classList.add('open');
+                    header.setAttribute('aria-expanded', 'true');
+
+                    /* 0px → 自然高度：scrollHeight 已包含内部 12px 上下内边距 */
+                    content.style.height = content.scrollHeight + 'px';
+
+                    /* 过渡结束后交还 auto，之后内容变高变矮都能自动适应 */
+                    settleTimer = setTimeout(() => {
+                        if (isOpen) content.style.height = 'auto';
+                    }, DURATION);
+                }
+
+                function collapse() {
+                    if (!isOpen) return;
+                    isOpen = false;
+                    clearTimeout(settleTimer);
+
+                    /* auto 不能作为过渡起点：先固定成当前像素高度（本帧无视觉变化） */
+                    content.style.height = content.scrollHeight + 'px';
+                    void content.offsetHeight;          // 强制提交一帧，让起点生效
+
+                    el.classList.remove('open');
+                    header.setAttribute('aria-expanded', 'false');
+                    content.style.height = '0px';       // 起点 → 0px，250ms 收起
+                }
+
+                function toggle() {
+                    if (isOpen) collapse(); else expand();
+                }
+
+                header.addEventListener('click', toggle);
+                header.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                        e.preventDefault();             // 空格默认会滚动页面
+                        toggle();
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

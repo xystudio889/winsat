@@ -1,0 +1,393 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="About.Text" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="AdvancedInfo.Text" xml:space="preserve">
+    <value>高级信息</value>
+  </data>
+  <data name="AppTheme.Description" xml:space="preserve">
+    <value>设置软件的主题展示。</value>
+  </data>
+  <data name="AppTheme.Header" xml:space="preserve">
+    <value>软件主题</value>
+  </data>
+  <data name="BaseScore.Text" xml:space="preserve">
+    <value>基本分数</value>
+  </data>
+  <data name="CalcPerSecond.Text" xml:space="preserve">
+    <value>每秒计算速度</value>
+  </data>
+  <data name="CloneCommandCopied" xml:space="preserve">
+    <value>克隆命令已复制到剪贴板。</value>
+  </data>
+  <data name="CloneRepoHeader.Header" xml:space="preserve">
+    <value>克隆仓库</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Component.Text" xml:space="preserve">
+    <value>组件</value>
+  </data>
+  <data name="CopiedTitle" xml:space="preserve">
+    <value>已复制</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="CopyAndClose" xml:space="preserve">
+    <value>复制并关闭</value>
+  </data>
+  <data name="DarkTheme.Content" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="Delete.Text" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="DeleteCanceled" xml:space="preserve">
+    <value>用户取消了选择。</value>
+  </data>
+  <data name="DeleteConfirmButton.Content" xml:space="preserve">
+    <value>是的，我同意删除。</value>
+  </data>
+  <data name="DeleteConfirmText.Text" xml:space="preserve">
+    <value>是否删除该配置文件，删除后不可恢复！</value>
+  </data>
+  <data name="DependenciesHeader.Header" xml:space="preserve">
+    <value>项目依赖</value>
+  </data>
+  <data name="DesktopGraphics.Text" xml:space="preserve">
+    <value>桌面图形性能</value>
+  </data>
+  <data name="Dev" xml:space="preserve">
+    <value>测试版</value>
+  </data>
+  <data name="DirectoryNotFoundContent" xml:space="preserve">
+    <value>未找到分析文件夹：{0}</value>
+  </data>
+  <data name="DirectoryNotFoundTitle" xml:space="preserve">
+    <value>目录不存在</value>
+  </data>
+  <data name="DiskTransferRate.Text" xml:space="preserve">
+    <value>硬盘数据传输速率</value>
+  </data>
+  <data name="ErrorDialogTitle" xml:space="preserve">
+    <value>发生了一个错误</value>
+  </data>
+  <data name="FileNotExist" xml:space="preserve">
+    <value>文件不存在</value>
+  </data>
+  <data name="GamingGraphics.Text" xml:space="preserve">
+    <value>游戏图形:</value>
+  </data>
+  <data name="GamingGraphicsDesc.Text" xml:space="preserve">
+    <value>3D 商务和游戏图形性能</value>
+  </data>
+  <data name="GetScore" xml:space="preserve">
+    <value>为此计算机评分</value>
+  </data>
+  <data name="Graphics.Text" xml:space="preserve">
+    <value>图形:</value>
+  </data>
+  <data name="HardwareChangedText" xml:space="preserve">
+    <value>要求刷新 Windows 体验指数。</value>
+  </data>
+  <data name="HardwareChangedTitle" xml:space="preserve">
+    <value>检测到新硬件</value>
+  </data>
+  <data name="Home.Content" xml:space="preserve">
+    <value>主页</value>
+  </data>
+  <data name="HomeDesc.Text" xml:space="preserve">
+    <value>Windows 体验指数可评估主要系统组件，分数范围从 1.0 到 9.9。</value>
+  </data>
+  <data name="HomeTitle.Text" xml:space="preserve">
+    <value>为此计算机评分并提高性能</value>
+  </data>
+  <data name="LastUpdateTime" xml:space="preserve">
+    <value>上次更新: {0}</value>
+  </data>
+  <data name="LatestFileWarning.Text" xml:space="preserve">
+    <value>你不能删除此文件，因为该文件是最新版本。</value>
+  </data>
+  <data name="LatestScore.Text" xml:space="preserve">
+    <value>你的分数是最新的。</value>
+  </data>
+  <data name="License.Content" xml:space="preserve">
+    <value>许可证</value>
+  </data>
+  <data name="LicenseReadFailed" xml:space="preserve">
+    <value>无法读取许可证文件。</value>
+  </data>
+  <data name="LightTheme.Content" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="LoadFileErrorTitle.Title" xml:space="preserve">
+    <value>加载时出现错误</value>
+  </data>
+  <data name="Loading.Text" xml:space="preserve">
+    <value>正在加载</value>
+  </data>
+  <data name="LoadSymbolErrorTitle.Title" xml:space="preserve">
+    <value>加载符号时出现错误</value>
+  </data>
+  <data name="MemoryOps.Text" xml:space="preserve">
+    <value>每秒内存运行速度</value>
+  </data>
+  <data name="MemoryRAM.Text" xml:space="preserve">
+    <value>内存(RAM):</value>
+  </data>
+  <data name="MitLicenseTitle" xml:space="preserve">
+    <value>MIT 许可证</value>
+  </data>
+  <data name="NavigationLeft.Content" xml:space="preserve">
+    <value>左侧</value>
+  </data>
+  <data name="NavigationLocation.Description" xml:space="preserve">
+    <value>选择要显示的导航栏位置。</value>
+  </data>
+  <data name="NavigationLocation.Header" xml:space="preserve">
+    <value>导航栏位置</value>
+  </data>
+  <data name="NavigationTop.Content" xml:space="preserve">
+    <value>上方</value>
+  </data>
+  <data name="NoScored" xml:space="preserve">
+    <value>(未评分)</value>
+  </data>
+  <data name="NoScoredXAML.Text" xml:space="preserve">
+    <value>(未评分)</value>
+  </data>
+  <data name="NotGetTip" xml:space="preserve">
+    <value>尚未建立 Windows 体验指数。</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="ParserMissing" xml:space="preserve">
+    <value>解析器丢失，无法加载友好试图。</value>
+  </data>
+  <data name="PermissionDeniedContent" xml:space="preserve">
+    <value>无法读取文件夹，请以管理员身份运行应用程序。</value>
+  </data>
+  <data name="PermissionDeniedTitle" xml:space="preserve">
+    <value>权限不足</value>
+  </data>
+  <data name="Personalization.Text" xml:space="preserve">
+    <value>个性化和行为</value>
+  </data>
+  <data name="PrimaryDisk.Text" xml:space="preserve">
+    <value>主硬盘:</value>
+  </data>
+  <data name="Processor.Text" xml:space="preserve">
+    <value>处理器:</value>
+  </data>
+  <data name="ProductInfo.Description" xml:space="preserve">
+    <value>© 2026 xystudio。 保留所有权利。</value>
+  </data>
+  <data name="ProductInfo.Header" xml:space="preserve">
+    <value>Windows 体验指数</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="RefreshComplete.Text" xml:space="preserve">
+    <value>刷新完成！</value>
+  </data>
+  <data name="RefreshXAML.Content" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="ReloadAssessment.Content" xml:space="preserve">
+    <value>重新加载评估</value>
+  </data>
+  <data name="RerunAssessment.Content" xml:space="preserve">
+    <value>重新运行评估</value>
+  </data>
+  <data name="RestartLater" xml:space="preserve">
+    <value>稍后</value>
+  </data>
+  <data name="RestartNow" xml:space="preserve">
+    <value>立即重启</value>
+  </data>
+  <data name="RestartRequiredText" xml:space="preserve">
+    <value>新的语言将在应用重启后生效。</value>
+  </data>
+  <data name="RestartRequiredTitle" xml:space="preserve">
+    <value>需要重启</value>
+  </data>
+  <data name="ScoredItems.Text" xml:space="preserve">
+    <value>评分的项目</value>
+  </data>
+  <data name="SelectFilePlaceholder.PlaceholderText" xml:space="preserve">
+    <value>选择一个文件以预览</value>
+  </data>
+  <data name="SelectScoreFile.Text" xml:space="preserve">
+    <value>请选择跑分文件：</value>
+  </data>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SourceCode.Text" xml:space="preserve">
+    <value>源码</value>
+  </data>
+  <data name="SourceCodeHeader.Header" xml:space="preserve">
+    <value>项目源码</value>
+  </data>
+  <data name="SubScore.Text" xml:space="preserve">
+    <value>子分数</value>
+  </data>
+  <data name="subScoreTip.Text" xml:space="preserve">
+    <value>由最低子分数决定</value>
+  </data>
+  <data name="SubmitBugHeader.Header" xml:space="preserve">
+    <value>提交 Bug</value>
+  </data>
+  <data name="SystemTheme.Content" xml:space="preserve">
+    <value>使用系统设置</value>
+  </data>
+  <data name="Title.Title" xml:space="preserve">
+    <value>Windows 体验指数</value>
+  </data>
+  <data name="Visualized.Text" xml:space="preserve">
+    <value>可视化</value>
+  </data>
+  <data name="Sound.Header" xml:space="preserve">
+    <value>控件音效</value>
+  </data>
+  <data name="Sound.Description" xml:space="preserve">
+    <value>控制应用的交互提示音。</value>
+  </data>
+  <data name="SpatialSound.Header" xml:space="preserve">
+    <value>开启空间音效</value>
+  </data>
+  <data name="SpatialSound.Description" xml:space="preserve">
+    <value>提供更沉浸的体验。</value>
+  </data>
+  <data name="Background.Header" xml:space="preserve">
+    <value>背景材质</value>
+  </data>
+  <data name="Background.Description" xml:space="preserve">
+    <value>选择要显示的应用背景材质。</value>
+  </data>
+  <data name="BackgroundNone.Content" xml:space="preserve">
+    <value>无</value>
+  </data>
+</root>

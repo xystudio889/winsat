@@ -10,12 +10,15 @@
 
     <Grid Margin="36 0 0 0">
         <StackPanel>
-            <TextBlock 
-                    Grid.Row = "1" 
-                    FontSize = "28" 
-                    Text = "调试内容" 
-                    Margin = "0 40 0 36"  
-            />
+            <TextBlock
+                Margin="0,40,36,36"
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="Debugging" />
+
+            <ScrollView HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Visible">
+                <!-- Content body -->
+                
+            </ScrollView>
         </StackPanel>
     </Grid>
 </Page>

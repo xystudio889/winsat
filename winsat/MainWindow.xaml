@@ -19,9 +19,15 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <!--  背景材质为“无”时用于遮住窗口透明区域的不透明背景  -->
+        <Border
+            x:Name="OpaqueBackground"
+            Grid.RowSpan="2"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            Visibility="Collapsed" />
         <TitleBar
             x:Name="titleBar"
-            Title="Windows 体验指数"
+            x:Uid="Title"
             IsPaneToggleButtonVisible="True"
             PaneToggleRequested="TitleBar_PaneToggleRequested"
             Height="48"
@@ -49,13 +55,13 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem
                     Tag="Home"
-                    Content="主页"
+                    x:Uid="Home"
                     Icon="Home" />
                 <NavigationViewItem
                     x:Name="DebugNavigation"
                     Visibility="Collapsed"
                     Tag="Debug"
-                    Content="调试"
+                    Content="Debug"
                 >
                     <NavigationViewItem.Icon>
                         <!-- 指定字体和对应的 Unicode 字符 -->

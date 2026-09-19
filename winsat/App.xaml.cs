@@ -15,6 +15,7 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using winsat.helpers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,7 +27,10 @@ namespace winsat
     /// </summary>
     public partial class App : Application
     {
-        private Window? _window;
+        /// <summary>
+        /// 当前应用的主窗口，供页面访问窗口级功能（如切换主题、导航栏位置）。
+        /// </summary>
+        public static MainWindow? MainWindow { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -34,6 +38,8 @@ namespace winsat
         /// </summary>
         public App()
         {
+            // 语言必须早于任何资源加载生效，否则界面仍会使用上一次的语言。
+            AppLanguage.ApplySavedLanguage();
             InitializeComponent();
         }
 
@@ -43,8 +49,8 @@ namespace winsat
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-            _window.Activate();
+            MainWindow = new MainWindow();
+            MainWindow.Activate();
         }
     }
 }

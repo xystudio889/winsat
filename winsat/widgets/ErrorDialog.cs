@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
 using System;
 using System.Windows.Input;
+using winsat.helpers;
 
 namespace winsat.widgets
 {
@@ -28,10 +29,10 @@ namespace winsat.widgets
             ContentDialog err = new ContentDialog()
             {
                 XamlRoot = root,
-                Title = "发生了一个错误",
+                Title = Loader.GetString("ErrorDialogTitle"),
                 Content = contentTextBlock,   // 将 TextBlock 赋给 Content
-                CloseButtonText = "确定",
-                PrimaryButtonText = "复制并关闭",
+                CloseButtonText = Loader.GetString("OK"),
+                PrimaryButtonText = Loader.GetString("CopyAndClose"),
                 PrimaryButtonCommand = new CopyCommand(fullMessage)
             };
 
@@ -49,15 +50,15 @@ namespace winsat.widgets
             _copyText = input;
         }
 
-        public bool CanExecute(object parameter) => true;
+        public bool CanExecute(object? parameter) => true;
 
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
             DataPackage package = new DataPackage();
             package.SetText(_copyText);
             Clipboard.SetContent(package);
         }
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged;
     }
 }

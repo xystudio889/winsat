@@ -19,6 +19,7 @@ using System.Xml;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using winsat.widgets;
+using winsat.helpers;
 
 using IoPath = System.IO.Path;
 
@@ -30,18 +31,13 @@ namespace winsat
         private bool _isDialogShowing = false;
         private bool _isRunning = false;
 
-        private static readonly SolidColorBrush DarkGrayBrush =
-            new SolidColorBrush(Color.FromArgb(255, 0x8A, 0x8A, 0x8A));
-        private static readonly SolidColorBrush OrangeBrush =
-            new SolidColorBrush(Color.FromArgb(255, 0xFF, 0x88, 0x0A));
-        private static readonly SolidColorBrush LightBlueBrush =
-            new SolidColorBrush(Color.FromArgb(255, 0x0E, 0xBA, 0xFF));
-        private static readonly SolidColorBrush DeepBlueBrush =
-            new SolidColorBrush(Color.FromArgb(255, 0x0A, 0xED, 0xCF));
-        private static readonly SolidColorBrush GreenBrush =
-            new SolidColorBrush(Color.FromArgb(255, 0x05, 0xAB, 0x18));
+        private SolidColorBrush TextBrush;
+        private SolidColorBrush SymbolBrush;
+        private SolidColorBrush TagBrush;
+        private SolidColorBrush KeyBrush;
+        private SolidColorBrush ValueBrush;
+        private SolidColorBrush CommentBrush;
 
-        private SolidColorBrush _defaultTextBrush;
         private UISettings _uiSettings;
         private readonly DispatcherQueue _dispatcherQueue;
 
@@ -53,6 +49,11 @@ namespace winsat
 
         public string winSatFilePath = IoPath.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Performance", "WinSAT", "DataStore");
 
+        public List<string> fileList;
+        public string latestFile;
+        public int lastIndex = -2;
+        string topUserLanguage = AppLanguage.SymbolLanguage;
+
         public HomePage()
         {
             InitializeComponent();
@@ -62,48 +63,57 @@ namespace winsat
             HighlightBlockBackground.Visibility = Visibility.Collapsed;
 
             // 运行加载函数
+            getFileList();
             UpdateTheme();
             StartThemeListener();
+            // 用户强制指定主题（或主题被解析）时同步刷新高亮配色
+            ActualThemeChanged += OnActualThemeChanged;
             LoadFilesAsync();
             GetScore(null, null);
-
-            // TODO: 添加FlyOut处理
-            //foreach (string line in FiltFile("C:\\Windows\\Performance\\WinSAT\\DataStore\\2026-09-06 21.26.01.131 Formal.Assessment (Recent).WinSAT.xml"))
-            //{
-            //    deletedFiles += ("^\"" + line + "^\" ");
-            //}
-
-            //deleteFile(deletedFiles);
         }
 
-        public async void deleteFile(String Files) {
-            // 1. 获取你的 .bat 脚本路径
-            string batchFilePath = IoPath.Combine(installDir, "Commands", "File_delete.bat");
-            Debug.WriteLine($"cmd.exe /C \"^\"{batchFilePath}^\" {deletedFiles} \"");
+        public async void DeleteFile(object sender, RoutedEventArgs e)
+        {
+            if (FileComboBox.SelectedItem is FileInfo selectedFile)
+            {
+                deletedFiles = String.Empty;
+                foreach (string line in FiltFile(selectedFile.FullName))
+                {
+                    deletedFiles += ("^\"" + line + "^\" ");
+                }
+                await deleteFile(deletedFiles);
+                RemoveButton.Flyout.Hide();
+                RefreshFileButton_Click(null, null);
 
-            // 2. 配置进程启动信息
+            }
+        }
+
+        public async Task deleteFile(string Files)
+        {
+            string batchFilePath = IoPath.Combine(installDir, "Commands", "File_delete.bat");
+
             var startInfo = new ProcessStartInfo
             {
-                FileName = "cmd.exe", // 关键点：启动 cmd.exe，而不是直接启动 .bat 文件[reference:1]
-                Arguments = $"/C \"^\"{batchFilePath}^\" {deletedFiles}\"", // /C 参数表示执行后关闭命令行窗口
-                Verb = "runas", // 这是请求管理员权限的关键[reference:4]
-                UseShellExecute = true, // Verb = "runas" 必须与 UseShellExecute = true 一起使用[reference:6]
-                // CreateNoWindow = true, // 可选：隐藏命令行窗口[reference:8]
+                FileName = "cmd.exe",
+                Arguments = $"/C \"\"{batchFilePath}\" {Files}\"",
+                Verb = "runas",
+                UseShellExecute = true,
+                CreateNoWindow = true,
             };
 
             try
             {
-                // 3. 启动进程
                 var process = Process.Start(startInfo);
-
-                // 4. 可选：等待脚本执行完成
-                // process?.WaitForExit();
+                if (process != null)
+                {
+                    // 用 Task.Run 避免阻塞 UI 线程；WaitForExit 在 runas 场景下仍然有效
+                    await Task.Run(() => process.WaitForExit());
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // 如果用户拒绝了 UAC 提权请求，或发生其他错误，会进入这里
-                // 你可以在这里处理错误，例如提示用户
-                ErrorDialog.Show(this.Content.XamlRoot, "用户取消了选择。");
+                ErrorDialog.Show(this.Content.XamlRoot, Loader.GetString("DeleteCanceled"));
+                throw; // 让调用者知道失败了，可以不刷新
             }
         }
 
@@ -131,21 +141,6 @@ namespace winsat
             return formatted;
         }
 
-        public static List<String> GetTimeFileList(string directory)
-        {
-            if (string.IsNullOrEmpty(directory))
-                throw new ArgumentException("无法提取目录");
-
-            if (!Directory.Exists(directory))
-                throw new DirectoryNotFoundException($"目录不存在: {directory}");
-
-            return Directory.GetFiles(directory)
-                .Select(f => new FileInfo(f))
-                .OrderBy(fi => fi.LastWriteTime)
-                .Select(fi => fi.FullName)
-                .ToList();
-        }
-
         /// <summary>
         /// 获取指定文件所在目录的文件列表（按修改时间升序），
         /// 并以该文件为最底端，向上查找文件名包含 "Formal.Assessment" 的文件，
@@ -161,7 +156,7 @@ namespace winsat
             if (string.IsNullOrWhiteSpace(filePath))
                 throw new ArgumentException("文件路径不能为空", nameof(filePath));
 
-            string directory = IoPath.GetDirectoryName(filePath);
+            string? directory = IoPath.GetDirectoryName(filePath);
             if (string.IsNullOrEmpty(directory))
                 throw new ArgumentException("无法提取目录", nameof(filePath));
 
@@ -172,7 +167,7 @@ namespace winsat
                 throw new DirectoryNotFoundException($"目录不存在: {directory}");
 
             // 1. 获取目录中所有文件，按修改时间升序排序（最旧 → 最新）
-            var sortedFiles = GetTimeFileList(directory);
+            var sortedFiles = FileHelper.GetFileTimeList(directory);
 
             // 2. 找到输入文件在排序列表中的索引
             int inputIndex = sortedFiles.IndexOf(filePath);
@@ -212,6 +207,20 @@ namespace winsat
             return sortedFiles.GetRange(startIndex, count);
         }
 
+        public void getFileList()
+        {
+            fileList = FileHelper.GetFileTimeList(winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList();
+
+            if (fileList.Count != 0)
+            {
+                latestFile = fileList.Last();
+            } else
+            {
+                latestFile = string.Empty;
+                lastIndex = -2;
+            }
+        }
+
         private async Task LoadFilesAsync()
         {
             try
@@ -220,9 +229,9 @@ namespace winsat
                 {
                     await new ContentDialog
                     {
-                        Title = "目录不存在",
-                        Content = $"未找到分析文件夹：{winSatFilePath}",
-                        CloseButtonText = "确定",
+                        Title = Loader.GetString("DirectoryNotFoundTitle"),
+                        Content = string.Format(Loader.GetString("DirectoryNotFoundContent"), winSatFilePath),
+                        CloseButtonText = Loader.GetString("OK"),
                         XamlRoot = this.Content.XamlRoot
                     }.ShowAsync();
                     return;
@@ -242,27 +251,50 @@ namespace winsat
                     }
                 }
 
-                FileComboBox.SelectedIndex = 0;
+                if (FileComboBox.Items.Count == 0) // 无项
+                {
+                    RemoveButton.Visibility = Visibility.Collapsed;
+                    LatestWarning.Visibility = Visibility.Collapsed;
+                    SelectorBar.Visibility = Visibility.Collapsed;
+                    HighlightBlockBackground.Visibility = Visibility.Collapsed;
+                    FriendlyBackground.Visibility = Visibility.Collapsed;
+                    LoadingPanel.Visibility = Visibility.Collapsed;
+                    LoadingRing.IsActive = false;
+                } else
+                {
+                    RemoveButton.Visibility = Visibility.Visible;
+                    LatestWarning.Visibility = Visibility.Visible;
+                    SelectorBar.Visibility = Visibility.Visible;
+                    HighlightBlockBackground.Visibility = Visibility.Collapsed;
+                    FriendlyBackground.Visibility = Visibility.Collapsed;
+                }
+
+                getFileList();
+
+                if (lastIndex == -2)
+                {
+                    FileComboBox.SelectedIndex = FileComboBox.Items.Count - 1;
+                } else
+                {
+                    FileComboBox.SelectedIndex = lastIndex;
+                }
+                lastIndex = FileComboBox.SelectedIndex;
             }
             catch (UnauthorizedAccessException)
             {
                 await new ContentDialog
                 {
-                    Title = "权限不足",
-                    Content = "无法读取文件夹，请以管理员身份运行应用程序。",
-                    CloseButtonText = "确定",
+                    Title = Loader.GetString("PermissionDeniedTitle"),
+                    Content = Loader.GetString("PermissionDeniedContent"),
+                    CloseButtonText = Loader.GetString("OK"),
                     XamlRoot = this.Content.XamlRoot
                 }.ShowAsync();
             }
-            catch (Exception ex)
+            catch (ArgumentException)
             {
-                await new ContentDialog
-                {
-                    Title = "加载失败",
-                    Content = $"发生错误：{ex.Message}",
-                    CloseButtonText = "确定",
-                    XamlRoot = this.Content.XamlRoot
-                }.ShowAsync();
+                // 参数错误：通常是 FileComboBox 选择了不存在的索引
+                FileComboBox.SelectedIndex = FileComboBox.Items.Count - 1; // 重置
+                lastIndex = FileComboBox.SelectedIndex;
             }
         }
 
@@ -270,6 +302,9 @@ namespace winsat
         {
             if (FileComboBox.SelectedItem is FileInfo selectedFile)
             {
+                RemoveButton.IsEnabled = !(IoPath.GetFileName(selectedFile.FullName) == latestFile);
+                LatestWarning.Visibility = (IoPath.GetFileName(selectedFile.FullName) == latestFile) ? Visibility.Visible: Visibility.Collapsed;
+
                 LoadingPanel.Visibility = Visibility.Visible; // 显示加载动画
                 LoadingRing.IsActive = true;
                 SelectorBar.Visibility = Visibility.Visible;
@@ -285,19 +320,20 @@ namespace winsat
 
                 if (!System.IO.File.Exists(selectedFile.FullName))
                 {
-                    LoadingFileErrorBar.Message = "文件不存在";
+                    LoadingFileErrorBar.Message = Loader.GetString("FileNotExist");
                     LoadingFileErrorBar.IsOpen = true;
                     return;
                 }
                 SelectorBarItem selectedItem = SelectorBar.SelectedItem;
                 int currentSelectedIndex = SelectorBar.Items.IndexOf(selectedItem);
-                System.Type pageType;
 
                 switch (currentSelectedIndex)
                 {
                     case 0:
                         bool isBarError = false;
-                        var symbolPath = IoPath.Combine(installDir, "Commands", "Symbol.json");
+                        bool notLoad = false;
+
+                        var symbolPath = IoPath.Combine(installDir, "Symbols", $"{topUserLanguage}.json");
 #if DEBUG
                         var parserPath = IoPath.Combine(installDir, "Commands", "xmlparser.py");
                         var command = "python";
@@ -311,11 +347,18 @@ namespace winsat
                         if ((!File.Exists(parserPath)) || (!File.Exists(symbolPath)))
                         {
                             isBarError = true;
-                            FriendlyBackground.Visibility = Visibility.Collapsed;
-                            LoadingSignalErrorBar.Message += "解析器丢失，无法加载友好试图。";
+                            LoadingSignalErrorBar.Message += Loader.GetString("ParserMissing") + "\n";
+                            notLoad = true;
                         }
 
                         string lines = (await ExecuteCommand(command, args));
+
+                        if (lines.StartsWith("Error"))
+                        {
+                            isBarError = true;
+                            LoadingSignalErrorBar.Message += $"{lines}\n";
+                            notLoad = true;
+                        }
 
                         foreach (string line in lines.Split("\n"))
                         {
@@ -337,16 +380,32 @@ namespace winsat
                                     FontWeight = FontWeights.Bold
                                 }; // 字符
                                 var Blueline = new Line() {
-                                    X1 = 90,
-                                    X2 = 680,
+                                    X1 = 160,
+                                    X2 = 1900,
                                     Y1 = 12,
                                     Y2 = 12,
                                     StrokeThickness = 4,
-                                    Stroke = new SolidColorBrush(Colors.SteelBlue)
+                                    Stroke = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"]
                                 }; // 线
 
                                 panel.Children.Add(text);
                                 panel.Children.Add(Blueline);
+                                ValuePanel.Children.Add(panel);
+                            }
+                            else if (!string.IsNullOrEmpty(line) && line.StartsWith("<subline>", StringComparison.Ordinal))
+                            {
+                                var panel = new Grid()
+                                {
+                                    Margin = new Thickness(0, 4, 0, 4)
+                                };
+                                var text = new TextBlock()
+                                {
+                                    Text = line.Replace("<subline>", "").Trim(),
+                                    FontSize = 13,
+                                    FontWeight = FontWeights.Bold
+                                }; // 字符
+
+                                panel.Children.Add(text);
                                 ValuePanel.Children.Add(panel);
                             }
                             else if (!string.IsNullOrEmpty(line) && line.StartsWith("<spacing>", StringComparison.Ordinal)) // 空格
@@ -359,7 +418,7 @@ namespace winsat
                             }
                             else
                             {
-                                String[] splited = line.Trim().Split(",");
+                                String[] splited = line.Trim().Split(",", 2);
                                 if (splited.Length == 2)
                                 {
                                     var panel = new Grid(); // 面板
@@ -371,7 +430,7 @@ namespace winsat
                                     var friendlyValue = new TextBlock()
                                     {
                                         Text = splited[1],
-                                        Margin = new Thickness(200, 0, 0, 0)
+                                        Margin = new Thickness(350, 0, 0, 0)
                                     }; // 值
 
                                     // 添加
@@ -387,7 +446,10 @@ namespace winsat
                             LoadingSignalErrorBar.IsOpen = true;
                         } // 加载可视化试图
 
-                        FriendlyBackground.Visibility = Visibility.Visible;
+                        if (!notLoad)
+                        {
+                            FriendlyBackground.Visibility = Visibility.Visible;
+                        }
                         LoadingPanel.Visibility = Visibility.Collapsed;
                         LoadingRing.IsActive = false;
                         break;
@@ -405,9 +467,6 @@ namespace winsat
             }
             else
             {
-                SelectorBar.Visibility = Visibility.Collapsed;
-                HighlightBlockBackground.Visibility = Visibility.Collapsed;
-                FriendlyBackground.Visibility = Visibility.Collapsed;
                 return;
             }
         }
@@ -474,7 +533,7 @@ namespace winsat
 
                         if(score == "0") // 未跑分
                         {
-                            score = "(未评分)";
+                            score = Loader.GetString("NoScored");
                         }
                         score_list.Add(score);
                     }
@@ -492,25 +551,26 @@ namespace winsat
                 MinScoreText.Visibility = Visibility.Visible;
                 LatestUpdateTime.Visibility = Visibility.Collapsed;
                 RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"];
+                // score_list[6] = "2";
 
                 switch (score_list[6])
                 {
                     case "1":
                         LatestTip.Visibility = Visibility.Visible;
                         LatestUpdateTime.Visibility = Visibility.Visible;
-                        LatestUpdateTime.Text = "上次更新: " + FormatDateTime(GetTimeFileList(winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList());
+                        LatestUpdateTime.Text = string.Format(Loader.GetString("LastUpdateTime"), FormatDateTime(FileHelper.GetFileTimeList(winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList()));
                         break;
                     case "2":
-                        WinSatTip.Title = "检测到新硬件";
-                        WinSatTip.Message = "要求刷新 Windows 体验指数。";
-                        WinsatTipButton.Content = "立即刷新";
+                        WinSatTip.Title = Loader.GetString("HardwareChangedTitle");
+                        WinSatTip.Message = Loader.GetString("HardwareChangedText");
+                        WinsatTipButton.Content = Loader.GetString("Refresh");
                         WinSatTip.IsOpen = true;
                         RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorDisabledBrush"];
                         break;
                     case "3":
                         WinSatTip.Title = "";
-                        WinSatTip.Message = "尚未建立 Windows 体验指数。";
-                        WinsatTipButton.Content = "为此计算机评分";
+                        WinSatTip.Message = Loader.GetString("NotGetTip");
+                        WinsatTipButton.Content = Loader.GetString("GetScore");
                         WinSatTip.IsOpen = true;
                         RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorDisabledBrush"];
                         RectangleCanvas.Visibility = Visibility.Collapsed;
@@ -591,9 +651,9 @@ namespace winsat
             const string RegistryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
             const string RegistryValueName = "AppsUseLightTheme";
 
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath))
+            using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(RegistryKeyPath))
             {
-                object registryValueObject = key?.GetValue(RegistryValueName);
+                object? registryValueObject = key?.GetValue(RegistryValueName);
                 if (registryValueObject == null)
                     return false;
 
@@ -611,31 +671,56 @@ namespace winsat
             });
         }
 
+        private void OnActualThemeChanged(FrameworkElement sender, object args)
+        {
+            UpdateTheme();
+            HighlightXml(xmlContent);
+        }
+
         private void UpdateTheme()
         {
             var theme = WindowThemeIsDark();
             if (theme)
             {
-                _defaultTextBrush = new SolidColorBrush(Color.FromArgb(255, 0xEF, 0xEF, 0xEF));
+                SymbolBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x8A, 0x8A, 0x8A));
+                TagBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0xFF, 0x88, 0x0A));
+                KeyBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x0E, 0xBA, 0xFF));
+                ValueBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x0A, 0xED, 0xCF));
+                CommentBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x09, 0xCD, 0x05));
+                TextBrush = new SolidColorBrush(Color.FromArgb(255, 0xEF, 0xEF, 0xEF));
             }
             else
             {
-                _defaultTextBrush = new SolidColorBrush(Color.FromArgb(255, 0x10, 0x00, 0x01));
+                SymbolBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x5C, 0x5C, 0x5C));
+                TagBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0xE8, 0x6B, 0x17));
+                KeyBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x01, 0x79, 0xAD));
+                ValueBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x0D, 0xAB, 0x8B));
+                CommentBrush =
+                    new SolidColorBrush(Color.FromArgb(255, 0x05, 0xAB, 0x18));
+                TextBrush = new SolidColorBrush(Color.FromArgb(255, 0x10, 0x00, 0x01));
             }
         }
 
         private bool WindowThemeIsDark()
         {
-            var settings = new UISettings();
-            var backgroundColor = settings.GetColorValue(UIColorType.Background);
-            return backgroundColor.ToString() != "#FFFFFFFF";
+            // 使用元素实际生效的主题，这样用户强制浅色/深色时高亮配色也能保持一致
+            return ActualTheme == ElementTheme.Dark;
         }
 
         // ---- XML 格式化（新增） ----
         private string FormatXml(string xml)
         {
             if (string.IsNullOrEmpty(xml))
-                return null;
+                return String.Empty;
 
             try
             {
@@ -656,13 +741,19 @@ namespace winsat
             catch
             {
                 // 格式化失败（例如 XML 无效），返回 null，后续使用原始内容
-                return null;
+                return String.Empty;
             }
         }
 
         // ---- 高亮逻辑（已集成格式化） ----
         public void HighlightXml(string xml)
         {
+            if (new object?[] { TextBrush, SymbolBrush, TagBrush, KeyBrush, ValueBrush, CommentBrush }.Any(x => x is null))
+            {
+                // 存在 null
+                throw new ArgumentNullException("出现一个 Null 的Brush");
+            }
+
             xmlContent = xml; // 保留原始内容
 
             // 自动格式化（缩进2空格），若失败则保留原始
@@ -689,7 +780,7 @@ namespace winsat
                         if (end == -1) end = xml.Length;
                         else end += 3;
                         string comment = xml.Substring(start, end - start);
-                        AddRun(paragraph, comment, GreenBrush);
+                        AddRun(paragraph, comment, CommentBrush);
                         index = end;
                     }
                     else if (xml.Length - index >= 2 && xml.Substring(index, 2) == "<?")
@@ -699,7 +790,7 @@ namespace winsat
                         if (end == -1) end = xml.Length;
                         else end += 2;
                         string pi = xml.Substring(start, end - start);
-                        AddRun(paragraph, pi, DarkGrayBrush);
+                        AddRun(paragraph, pi, SymbolBrush);
                         index = end;
                     }
                     else if (xml.Length - index >= 9 && xml.Substring(index, 9) == "<![CDATA[")
@@ -765,23 +856,23 @@ namespace winsat
             var tokens = TokenizeTag(tag);
             foreach (var token in tokens)
             {
-                SolidColorBrush brush = null;
+                SolidColorBrush brush;
                 switch (token.Type)
                 {
                     case TokenType.Delimiter:
-                        brush = DarkGrayBrush;
+                        brush = SymbolBrush;
                         break;
                     case TokenType.TagName:
-                        brush = OrangeBrush;
+                        brush = TagBrush;
                         break;
                     case TokenType.AttributeName:
-                        brush = LightBlueBrush;
+                        brush = KeyBrush;
                         break;
                     case TokenType.AttributeValue:
-                        brush = DeepBlueBrush;
+                        brush = ValueBrush;
                         break;
-                    case TokenType.Whitespace:
-                        brush = null;
+                    default:
+                        brush = TextBrush;
                         break;
                 }
                 AddRun(paragraph, token.Text, brush);
@@ -956,8 +1047,13 @@ namespace winsat
         {
             if (string.IsNullOrEmpty(text)) return;
             var run = new Run { Text = text };
-            run.Foreground = brush ?? _defaultTextBrush;
+            run.Foreground = brush ?? TextBrush;
             paragraph.Inlines.Add(run);
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

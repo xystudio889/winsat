@@ -1,5 +1,5 @@
 {
-  "$requires": 7,
+  "$requires": 8,
   "$locale": {
     "none": "None",
     "mode_normal": "normal mode",

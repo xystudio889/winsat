@@ -1,13 +1,18 @@
 <Solution>
   <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="SelfContained" />
     <Platform Name="ARM64" />
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
   <Project Path="winsat/winsat.csproj">
-    <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
+    <Platform Solution="Debug|ARM64" Project="x86" />
+    <Platform Solution="Release|ARM64" Project="ARM64" />
+    <Platform Solution="SelfContained|ARM64" Project="ARM64" />
     <Deploy />
   </Project>
 </Solution>

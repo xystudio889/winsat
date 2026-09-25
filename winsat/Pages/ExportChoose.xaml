@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="winsat.ExportChoose"
+    x:Class="winsat.pages.ExportChoose"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:winsat"
+    xmlns:local="using:winsat.pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -36,34 +36,49 @@
         <StackPanel x:Name="HTMLExport" Width="660" Spacing="4" Visibility="Collapsed">
             <TextBlock x:Uid="SelectScoreFile" />
             <ComboBox x:Name="FileComboBox"
-            DisplayMemberPath="Name"
-            SelectedValuePath="FullName"
-            x:Uid="SelectFilePlaceholder"
-            Width="400"
-            HorizontalAlignment="Left"  Margin="0 8 0 0" SelectionChanged="SelectionChanged" />
+    DisplayMemberPath="Name"
+    SelectedValuePath="FullName"
+    x:Uid="SelectFilePlaceholder"
+    Width="400"
+    HorizontalAlignment="Left"  Margin="0 8 0 0" SelectionChanged="SelectionChanged" />
 
             <InfoBar x:Name="LoadingFileErrorBar" Severity="Error" IsOpen="False"  x:Uid="LoadFileErrorTitle">
                 <InfoBar.ActionButton>
                     <Button 
-                        x:Uid="RefreshXAML"
-                        Click="RefreshFileButton_Click"
+                x:Uid="RefreshXAML"
+                Click="RefreshFileButton_Click"
+            />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <StackPanel x:Name="BottomBar" Orientation="Horizontal"  Margin="0 8 0 0" Spacing="325">
+                <CheckBox x:Name="EasyViewCheckbox" IsChecked="True" Content="附带简易分数" />
+                <StackPanel Spacing="12" Orientation="Horizontal"  Margin="0 8 0 0" HorizontalAlignment="Right" >
+                    <Button 
+                x:Uid="RefreshXAML" 
+                Click="RefreshFileButton_Click"
+            />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel x:Name="WorkingBar" Orientation="Horizontal"  Margin="0 8 0 0" Visibility="Collapsed" Spacing="16">
+                <ProgressRing x:Name="WorkingRing" />
+                <TextBlock x:Uid="Working" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel x:Name="ControlBar" Spacing="12" Orientation="Horizontal"  Margin="280 16 0 0" Visibility="Collapsed" HorizontalAlignment="Right" >
+            <Button Content="上一步" Click="OnPrevPage" />
+            <Button x:Name="ExportButton" Content="导出" Click="ExportFileButton_Click" Style="{StaticResource AccentButtonStyle}" />
+        </StackPanel>
+        <StackPanel x:Name="ExportEnd" Width="660" Spacing="4">
+            <InfoBar x:Name="ExportSuccessBar" Severity="Success" IsOpen="False"  x:Uid="ExportSuccessBarTitle">
+                <InfoBar.ActionButton>
+                    <Button 
+                        x:Uid="OpenExportFileButton"
+                        Click="ExportSuccessFileButton_Click"
                     />
                 </InfoBar.ActionButton>
             </InfoBar>
-            <StackPanel x:Name="BottomBar" Orientation="Horizontal"  Margin="0 8 0 0" Spacing="240">
-                <CheckBox x:Name="EasyViewCheckbox" IsChecked="True" Content="附带简易分数" />
-                <StackPanel Spacing="12" Orientation="Horizontal"  Margin="0 8 0 0" HorizontalAlignment="Right" >
-                    <TextBlock x:Name="RefreshedFile" Visibility="Collapsed" x:Uid="RefreshComplete" Margin="0 8 0 0" />
-                    <Button 
-                        x:Uid="RefreshXAML" 
-                        Click="RefreshFileButton_Click"
-                    />
-                </StackPanel>
-            </StackPanel>
-        </StackPanel>
-        <StackPanel Spacing="12" Orientation="Horizontal"  Margin="280 16 0 0" >
-            <Button Content="上一步" />
-            <Button x:Name="ExportButton" Content="导出" Style="{StaticResource AccentButtonStyle}" />
+            <InfoBar x:Name="ExportErrorBar" Severity="Error" IsOpen="False"  x:Uid="ExportFileErrorXAML" />
+
         </StackPanel>
     </StackPanel>
 </Page>

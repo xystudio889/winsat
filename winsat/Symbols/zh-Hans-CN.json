@@ -1,5 +1,5 @@
 {
-  "$requires": 7,
+  "$requires": 8,
   "$locale": {
     "none": "无",
     "mode_normal": "普通模式",

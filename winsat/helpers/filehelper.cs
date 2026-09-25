@@ -8,8 +8,12 @@ using System.Threading.Tasks;
 
 namespace winsat.helpers
 {
+
     internal class FileHelper
     {
+        public static string winSatFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Performance", "WinSAT", "DataStore");
+        public static string installDir = AppDomain.CurrentDomain.BaseDirectory; // 软件安装路径
+
         public static List<String> GetFileTimeList(string directory)
         {
             if (string.IsNullOrEmpty(directory))

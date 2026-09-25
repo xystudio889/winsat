@@ -23,7 +23,7 @@ using winsat.helpers;
 
 using IoPath = System.IO.Path;
 
-namespace winsat
+namespace winsat.pages
 {
     public sealed partial class HomePage : Page
     {
@@ -43,11 +43,7 @@ namespace winsat
 
         public string xmlContent = String.Empty;
 
-        public string installDir = AppDomain.CurrentDomain.BaseDirectory; // 软件安装路径
-
         public string deletedFiles = "";
-
-        public string winSatFilePath = IoPath.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Performance", "WinSAT", "DataStore");
 
         public List<string> fileList;
         public string latestFile;
@@ -90,7 +86,7 @@ namespace winsat
 
         public async Task deleteFile(string Files)
         {
-            string batchFilePath = IoPath.Combine(installDir, "Commands", "File_delete.bat");
+            string batchFilePath = IoPath.Combine(FileHelper.installDir, "Commands", "File_delete.bat");
 
             var startInfo = new ProcessStartInfo
             {
@@ -209,7 +205,7 @@ namespace winsat
 
         public void getFileList()
         {
-            fileList = FileHelper.GetFileTimeList(winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList();
+            fileList = FileHelper.GetFileTimeList(FileHelper.winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList();
 
             if (fileList.Count != 0)
             {
@@ -225,12 +221,12 @@ namespace winsat
         {
             try
             {
-                if (!Directory.Exists(winSatFilePath))
+                if (!Directory.Exists(FileHelper.winSatFilePath))
                 {
                     await new ContentDialog
                     {
                         Title = Loader.GetString("DirectoryNotFoundTitle"),
-                        Content = string.Format(Loader.GetString("DirectoryNotFoundContent"), winSatFilePath),
+                        Content = string.Format(Loader.GetString("DirectoryNotFoundContent"), FileHelper.winSatFilePath),
                         CloseButtonText = Loader.GetString("OK"),
                         XamlRoot = this.Content.XamlRoot
                     }.ShowAsync();
@@ -239,7 +235,7 @@ namespace winsat
 
                 var files = await Task.Run(() =>
                 {
-                    var directoryInfo = new DirectoryInfo(winSatFilePath);
+                    var directoryInfo = new DirectoryInfo(FileHelper.winSatFilePath);
                     return directoryInfo.GetFiles();
                 });
 
@@ -333,13 +329,13 @@ namespace winsat
                         bool isBarError = false;
                         bool notLoad = false;
 
-                        var symbolPath = IoPath.Combine(installDir, "Symbols", $"{topUserLanguage}.json");
+                        var symbolPath = IoPath.Combine(FileHelper.installDir, "Symbols", $"{topUserLanguage}.json");
 #if DEBUG
-                        var parserPath = IoPath.Combine(installDir, "Commands", "xmlparser.py");
+                        var parserPath = IoPath.Combine(FileHelper.installDir, "Commands", "xmlparser.py");
                         var command = "python";
                         var args = $"\"{parserPath}\" \"{selectedFile.FullName}\" \"{symbolPath}\" ";
 #else
-                        var parserPath = IoPath.Combine(installDir, "Commands", "xmlparser.exe");
+                        var parserPath = IoPath.Combine(FileHelper.installDir, "Commands", "xmlparser.exe");
                         var command = parserPath;
                         var args = $"\"{selectedFile.FullName}\" \"{symbolPath}\" ";
 #endif
@@ -351,7 +347,7 @@ namespace winsat
                             notLoad = true;
                         }
 
-                        string lines = (await ExecuteCommand(command, args));
+                        string lines = (await Commands.Execute(command, args));
 
                         if (lines.StartsWith("Error"))
                         {
@@ -476,39 +472,6 @@ namespace winsat
             SelectionChanged(null, null);
         }
 
-        public static List<string> RunPwsh(string command)
-        {
-            var results = new List<string>();
-            var psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                Arguments = $"-NoProfile -NonInteractive -Command \"{command}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using (var p = Process.Start(psi)!)
-            {
-                string? line;
-                while ((line = p.StandardOutput.ReadLine()) != null)
-                {
-                    results.Add(line);
-                }
-
-                string err = p.StandardError.ReadToEnd();
-                if (!string.IsNullOrEmpty(err))
-                {
-                    results.Add("[ERROR] " + err);
-                }
-
-                p.WaitForExit();
-            }
-
-            return results;
-        }
-
         public async void RefreshFileButton_Click(object sender, RoutedEventArgs e)
         {
             LoadingFileErrorBar.IsOpen = false;
@@ -523,27 +486,7 @@ namespace winsat
 
             try
             {
-                List<string> scores = RunPwsh("Get-CimInstance Win32_WinSAT");
-                List<string> score_list = [];
-
-                foreach (string result in scores)
-                {
-                    try { 
-                        var score = result.Split(':')[1].Trim();
-
-                        if(score == "0") // 未跑分
-                        {
-                            score = Loader.GetString("NoScored");
-                        }
-                        score_list.Add(score);
-                    }
-                    catch { continue; }
-                }
-
-                if (score_list.Count < 8)
-                {
-                    return;
-                }
+                List<string> score_list = await ScoreHelper.GetScore();
 
                 // 设置显示
                 LatestTip.Visibility = Visibility.Collapsed;
@@ -558,7 +501,7 @@ namespace winsat
                     case "1":
                         LatestTip.Visibility = Visibility.Visible;
                         LatestUpdateTime.Visibility = Visibility.Visible;
-                        LatestUpdateTime.Text = string.Format(Loader.GetString("LastUpdateTime"), FormatDateTime(FileHelper.GetFileTimeList(winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList()));
+                        LatestUpdateTime.Text = string.Format(Loader.GetString("LastUpdateTime"), FormatDateTime(FileHelper.GetFileTimeList(FileHelper.winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList()));
                         break;
                     case "2":
                         WinSatTip.Title = Loader.GetString("HardwareChangedTitle");
@@ -592,46 +535,13 @@ namespace winsat
             }
         }
 
-        public async Task<string> ExecuteCommand(string command, string arguments="")
-        {
-            var processInfo = new ProcessStartInfo(command, arguments)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            string output = "";
-            string error = "";
-
-            using (var process = new Process { StartInfo = processInfo })
-            {
-                process.Start();
-
-                // 异步读取输出流
-                output = await process.StandardOutput.ReadToEndAsync();
-                error = await process.StandardError.ReadToEndAsync();
-
-                // 等待进程退出 (.NET 5+ 支持)
-                await process.WaitForExitAsync(); // 或使用 process.WaitForExit()
-            }
-
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                return $"Error: {error}";
-            }
-
-            return output;
-        }
-
         public async void RunScore(object sender, RoutedEventArgs e)
         {
             if (_isRunning) return;
             _isRunning = true;
             WinSatTip.IsOpen = false;
 
-            await ExecuteCommand("cmd", "/c winsat formal -restart clean");
+            await Commands.Execute("cmd", "/c winsat formal -restart clean");
 
             _isRunning = false;
 

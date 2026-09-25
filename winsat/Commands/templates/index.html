@@ -51,6 +51,9 @@
 
             /* 信息卡 */
             --content-card-bg: #fdfdfd;
+
+            --scroll-background: #fafbfc;
+            --scroll-foreground: #87898b;
         }
 
         .dark * {
@@ -90,6 +93,9 @@
 
             /* 信息卡 */
             --content-card-bg: #393939;
+
+            --scroll-background: #2d2d2d;
+            --scroll-foreground: #9ea0a3;
         }
 
         * {
@@ -777,7 +783,7 @@
 
         /* ========== 滑块 ========== */
         .content-card::-webkit-scrollbar-thumb {
-            background-color: #a0a0a0;
+            background-color: var(--scroll-foreground);
             border-radius: 999px;
         }
 
@@ -798,30 +804,10 @@
             width: 100%;
         }
 
-        .content-card::-webkit-scrollbar-button:vertical:decrement {
-            /* 上箭头 */
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 2L9 7H1z' fill='%23a0a0a0'/></svg>");
-        }
-
-        .content-card::-webkit-scrollbar-button:vertical:increment {
-            /* 下箭头 */
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 8L1 3h8z' fill='%23a0a0a0'/></svg>");
-        }
-
         /* --- 水平方向：左右箭头 --- */
         .content-card::-webkit-scrollbar-button:horizontal {
             width: 8px;
             height: 100%;
-        }
-
-        .content-card::-webkit-scrollbar-button:horizontal:decrement {
-            /* 左箭头 */
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M2 5l5-4v8z' fill='%23a0a0a0'/></svg>");
-        }
-
-        .content-card::-webkit-scrollbar-button:horizontal:increment {
-            /* 右箭头 */
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M8 5L3 1v8z' fill='%23a0a0a0'/></svg>");
         }
 
         /* ========== 横竖交汇角 ========== */
@@ -838,13 +824,13 @@
 
         /* 轨道渐显为 #303030 */
         .content-card:hover::-webkit-scrollbar-track {
-            background-color: #303030;
+            background-color: var(--scroll-background);
         }
 
         /* 箭头渐显，且底色与轨道一致，视觉连贯 */
         .content-card:hover::-webkit-scrollbar-button {
             opacity: 1;
-            background-color: #303030;
+            background-color: var(--scroll-background);
         }
     </style>
 
@@ -865,32 +851,32 @@
     <div class="header">
         <div class="header-item item-left">
             <div class="fonticon">&#xE7F8;</div>
-            <div class="title-text" data-i18n="ExportTitle">Windows 体验指数导出</div>
+            <div class="title-text" data-i18n="ExportTitle">Windows Experience Index Export</div>
             <div class="spacing"></div>
         </div>
         <div class="header-item item-right">
             <div class="right-subitem">
                 <div class="right-subitem" style="gap: 8px">
                     <div class="fonticon">&#xE790;</div>
-                    <span data-i18n="Appearance">主题: </span>
+                    <span data-i18n="Appearance">Appearance: </span>
                 </div>
                 <!-- 第一个下拉框：主题选择（使用系统设置 / 浅色 / 深色） -->
                 <div class="dropdown-host" id="themeDropdown">
                     <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox"
                         aria-expanded="false">
-                        <span class="dropdown-text">使用系统设置</span>
+                        <span class="dropdown-text">Use browser setting</span>
                         <span class="dropdown-arrow" aria-hidden="true">&#xE70D;</span>
                     </button>
 
                     <div class="dd-popup" role="listbox" aria-label="软件主题" data-i18n-aria="AppTheme">
                         <div class="dd-item selected" role="option" aria-selected="true" data-value="system"
-                            data-i18n="SystemTheme">使用系统设置</div>
+                            data-i18n="SystemTheme">Use browser setting</div>
                         <div class="dd-item" role="option" aria-selected="false" data-value="light"
                             data-i18n="LightTheme">
-                            浅色
+                            Light
                         </div>
                         <div class="dd-item" role="option" aria-selected="false" data-value="dark"
-                            data-i18n="DarkTheme">深色
+                            data-i18n="DarkTheme">Dark
                         </div>
                     </div>
                 </div>
@@ -905,14 +891,12 @@
                 <div class="dropdown-host" id="langDropdown">
                     <button type="button" class="dropdown" role="combobox" aria-haspopup="listbox"
                         aria-expanded="false">
-                        <span class="dropdown-text">Use System Setting</span>
+                        <span class="dropdown-text">Use Browser Setting</span>
                         <span class="dropdown-arrow" aria-hidden="true">&#xE70D;</span>
                     </button>
 
                     <div class="dd-popup" role="listbox" aria-label="语言" data-i18n-aria="AppLanguage">
-                        <div class="dd-item selected" role="option" aria-selected="true" data-value="system">Use System
-                            Setting
-                        </div>
+                        <div class="dd-item selected" role="option" aria-selected="true" data-value="system">Use Browser Setting</div>
                         <div class="dd-item" role="option" aria-selected="false" data-value="zh-CN">简体中文</div>
                         <div class="dd-item" role="option" aria-selected="false" data-value="en-US">English</div>
                     </div>
@@ -921,7 +905,7 @@
         </div>
     </div>
     <div class="content">
-        <p class="title" data-i18n="ResultTitle">Windows 体验指数结果</p>
+        <p class="title" data-i18n="ResultTitle">Windows Experience Index results</p>
     </div>
 
     <script>
@@ -950,7 +934,7 @@
                 'DiskTransferRate': '硬盘数据传输速率',
                 'subScoreTip': '由最低子分数决定',
                 'AppTheme': '软件主题',
-                'SystemTheme': '使用系统设置',
+                'SystemTheme': '使用浏览器设置',
                 'LightTheme': '浅色',
                 'DarkTheme': '深色',
                 'AppLanguage': '语言',
@@ -976,11 +960,9 @@
                 'DiskTransferRate': 'Disk data transfer rate',
                 'subScoreTip': 'Decided by the lowest sub-score',
                 'AppTheme': 'Software theme',
-                'SystemTheme': 'Use system setting',
+                'SystemTheme': 'Use browser setting',
                 'LightTheme': 'Light',
                 'DarkTheme': 'Dark',
-                'AppLanguage': 'Language',
-                'SystemLanguage': 'Use system setting',
                 "Appearance": 'Appearance: ',
                 "Advanced": "Advanced information"
             }

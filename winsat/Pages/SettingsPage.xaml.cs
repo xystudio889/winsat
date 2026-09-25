@@ -12,7 +12,7 @@ using winsat.widgets;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace winsat;
+namespace winsat.pages;
 
 /// <summary>
 /// 设置页：软件主题、导航栏位置以及“关于”信息。
@@ -217,7 +217,9 @@ public sealed partial class SettingsPage : Page
             XamlRoot = this.Content.XamlRoot,
             Title = "导出向导",
             CloseButtonText = Loader.GetString("Close"),
-            Content = new ExportChoose()
+            Content = new ExportChoose(),
+            Width = 700,
+            Height = 450
         };
 
         await dialog.ShowAsync();

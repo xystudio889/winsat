@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 init(autoreset=True)  # 重置颜色设置，避免在终端中出现颜色冲突
 
-__version__ = 7.1
+__version__ = 8.0
 cdata_regex = re.compile(r'<!\[CDATA\[\s+(.+?)\s+\]\]>', re.DOTALL)
 
 # 特殊值：不是 xpath，而是直接产生结构化标记（键名只用于区分，spacing 不需要键名）
@@ -61,7 +61,7 @@ DEFAULT_TEXTS = {
 AVAILABLE = {'zh-CN': 'zh-Hans-cn', 'en-US': 'en-US'}
 HTML_FILE: dict[str, BeautifulSoup] = None # 设置html列表
 
-stdout: list[str] = [] # 输出
+stdout = []
 
 class SignalConfigError(Exception):
     """符号文件写法有误（与「取不到值」区分开）。"""
@@ -71,7 +71,7 @@ def createTemplate(key: str) -> BeautifulSoup:
     try:
         return HTML_FILE[key].__copy__()
     except KeyError:
-        _print(f'<error>HTML 模板不存在: {key}\n', False)
+        _print_error(f'HTML 模板不存在: {key}', False)
         exit(0)
 
 def _locale_text(locale, key):
@@ -96,8 +96,7 @@ def _fallback_text(locale, key):
 
 def _print_error(text, no_print):
     """错误行统一加协议前缀 <error>（C# 端按此前缀识别）。"""
-    if not no_print:
-        _print('<error>{0}'.format(text), no_print)
+    _print('<error>{0}'.format(text).replace('\n', '\\n'), no_print)
 
 def _print(text, no_print):
     '''打印并添加输出'''
@@ -261,7 +260,7 @@ def _render_transpose(name, group, root, defs, locale, print_output):
 def parse_xml(file, signal, no_print: bool=False):
     global stdout
 
-    stdout.clear() # 清空
+    stdout = [] # 输出内容
 
     # 加载 XML
     tree = etree.parse(file)
@@ -338,7 +337,6 @@ def parse_xml(file, signal, no_print: bool=False):
         else:
             for i, value in enumerate(values):
                 _print('{0} #{1},{2}'.format(k, i, value), no_print)
-
 
 def _read_locale(signal):
     """报错前先尝试读一次符号文件的 $locale；读不到返回 None（改用英文兜底）。"""
@@ -489,10 +487,8 @@ def highlight(text):
     return rendered
 
 def export_html(source: str, symbol: str, available: dict[str, str], output_path: str, score: bool):
-    global stdout
-
     if not HTML_FILE:
-        _print('<error>不存在HTML模板', True)
+        _print_error('不存在HTML模板', True)
         sys.exit(1)
 
     base_html = createTemplate('index')
@@ -546,7 +542,7 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
 
         for line in stdout:
             if line.startswith('<error>'):
-                print(line)
+                print(line.replace('<error>', f'<error>At {k}: '))
                 sys.exit(1)
             elif line.startswith('<line>'):
                 line_obj = createTemplate('ContentCard/bigline')

@@ -15,8 +15,8 @@
                     <StackPanel Orientation="Horizontal" Spacing="16">
                         <FontIcon Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Glyph="&#xE7B8;" />
                         <StackPanel Orientation="Vertical" Spacing="4">
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="导出为包" FontWeight="Bold" FontSize="16" />
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="包可以用作导入跑分文件，比较难阅读。&#x000A;注意只会导出高级分析文件，而不会导出原分数。" />
+                            <TextBlock x:Uid="ExportWSTTitle" Grid.Row="0" Grid.Column="1" FontWeight="Bold" FontSize="16" />
+                            <TextBlock x:Uid="ExportWSTDesc" Grid.Row="0" Grid.Column="1" />
                         </StackPanel>
                     </StackPanel>
                 </Button>
@@ -24,23 +24,47 @@
                     <StackPanel Orientation="Horizontal" Spacing="16">
                         <FontIcon Glyph="&#xE8A1;" />
                         <StackPanel Orientation="Vertical" Spacing="4">
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="导出为 HTML" FontWeight="Bold" FontSize="16" />
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="HTML 文件可以很方便的用浏览器查阅或打印。&#x000A;但是这样你就不能再次导入此文件。" />
+                            <TextBlock x:Uid="ExportHTMLTitle" Grid.Row="0" Grid.Column="1" FontWeight="Bold" FontSize="16" />
+                            <TextBlock x:Uid="ExportHTMLDesc" Grid.Row="0" Grid.Column="1" />
                         </StackPanel>
                     </StackPanel>
                 </Button>
             </StackPanel>
         </StackPanel>
-        <StackPanel x:Name="WSTExport" Width="660" Spacing="4" Visibility="Collapsed">
+        <StackPanel x:Name="WSTExport" Spacing="4" Visibility="Collapsed">
+            <TextBlock x:Uid="SelectExportFile" />
+            <Grid x:Name="WSTBar" Margin="0 4 0 0" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <!-- 三个事件都要接：WinUI 三态循环是 未选中 -> 已选中 -> 不确定，
+                     少接一个就会有状态点不动（如去掉 Indeterminate 时“全选”会变成“半选”） -->
+                <CheckBox x:Name="OptionsAllCheckBox" x:Uid="SelectAllOptions"
+                          IsThreeState="True"
+                          Checked="SelectAll_Checked"
+                          Unchecked="SelectAll_Unchecked"
+                          Indeterminate="SelectAll_Indeterminate" />
+            </Grid>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="8 0 8 0" Margin="8 0 8 0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Height="380" CornerRadius="{ThemeResource ControlCornerRadius}">
+                <StackPanel x:Name="ExportFileContent" Padding="0 4 0 4" />
+            </ScrollViewer>
+            <StackPanel HorizontalAlignment="Stretch" Margin="0 8 0 0">
+                <StackPanel HorizontalAlignment="Right" Margin="0 4 0 0" Orientation="Horizontal" Spacing="8">
+                    <TextBlock x:Name="WSTRefreshComplete" x:Uid="RefreshComplete" Visibility="Collapsed" Margin="0 6 0 0" />
+                    <Button x:Uid="RefreshXAML" Click="RefreshWstFileButton_Click"  />
+                </StackPanel>
+            </StackPanel>
         </StackPanel>
-        <StackPanel x:Name="HTMLExport" Width="660" Spacing="4" Visibility="Collapsed">
+        <StackPanel x:Name="HTMLExport" Spacing="4" Visibility="Collapsed" HorizontalAlignment="Stretch">
             <TextBlock x:Uid="SelectScoreFile" />
             <ComboBox x:Name="FileComboBox"
-    DisplayMemberPath="Name"
-    SelectedValuePath="FullName"
-    x:Uid="SelectFilePlaceholder"
-    Width="400"
-    HorizontalAlignment="Left"  Margin="0 8 0 0" SelectionChanged="SelectionChanged" />
+                DisplayMemberPath="Name"
+                SelectedValuePath="FullName"
+                x:Uid="SelectFilePlaceholder"
+                Width="400"
+                HorizontalAlignment="Left"  Margin="0 8 0 0" SelectionChanged="SelectionChanged" />
 
             <InfoBar x:Name="LoadingFileErrorBar" Severity="Error" IsOpen="False"  x:Uid="LoadFileErrorTitle">
                 <InfoBar.ActionButton>
@@ -50,26 +74,33 @@
             />
                 </InfoBar.ActionButton>
             </InfoBar>
-            <StackPanel x:Name="BottomBar" Orientation="Horizontal"  Margin="0 8 0 0" Spacing="325">
-                <CheckBox x:Name="EasyViewCheckbox" IsChecked="True" Content="附带简易分数" />
-                <StackPanel Spacing="12" Orientation="Horizontal"  Margin="0 8 0 0" HorizontalAlignment="Right" >
-                    <Button 
-                x:Uid="RefreshXAML" 
-                Click="RefreshFileButton_Click"
-            />
+            <Grid x:Name="BottomBar"  Margin="0 8 0 0" HorizontalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox x:Name="EasyViewCheckbox" x:Uid="EasyViewCheckbox" IsChecked="True" />
+                <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    VerticalAlignment="Center">
+                    <TextBlock x:Name="RefreshComplete" x:Uid="RefreshComplete" Margin="0 6 0 0" Visibility="Collapsed" />
+                    <Button x:Uid="RefreshXAML" Click="RefreshFileButton_Click" />
                 </StackPanel>
-            </StackPanel>
-            <StackPanel x:Name="WorkingBar" Orientation="Horizontal"  Margin="0 8 0 0" Visibility="Collapsed" Spacing="16">
-                <ProgressRing x:Name="WorkingRing" />
-                <TextBlock x:Uid="Working" />
-            </StackPanel>
+            </Grid>
+        </StackPanel>
+        <!-- HTML 与包模式共用的“正在工作”提示 -->
+        <StackPanel x:Name="WorkingBar" Orientation="Horizontal"  Margin="0 8 0 0" Visibility="Collapsed" Spacing="16">
+            <ProgressRing x:Name="WorkingRing" />
+            <TextBlock x:Uid="Working" />
         </StackPanel>
         <StackPanel x:Name="ControlBar" Spacing="12" Orientation="Horizontal"  Margin="280 16 0 0" Visibility="Collapsed" HorizontalAlignment="Right" >
-            <Button Content="上一步" Click="OnPrevPage" />
-            <Button x:Name="ExportButton" Content="导出" Click="ExportFileButton_Click" Style="{StaticResource AccentButtonStyle}" />
+            <Button x:Uid="PrevStep" Click="OnPrevPage" />
+            <Button x:Name="ExportButton" x:Uid="ExportButton" Click="ExportFileButton_Click" Style="{StaticResource AccentButtonStyle}" />
         </StackPanel>
-        <StackPanel x:Name="ExportEnd" Width="660" Spacing="4">
-            <InfoBar x:Name="ExportSuccessBar" Severity="Success" IsOpen="False"  x:Uid="ExportSuccessBarTitle">
+        <StackPanel x:Name="ExportEnd" HorizontalAlignment="Stretch" Spacing="4">
+            <InfoBar x:Name="ExportSuccessBar" Severity="Success" IsOpen="False"  x:Uid="ExportSuccessBarTitle" IsClosable="False">
                 <InfoBar.ActionButton>
                     <Button 
                         x:Uid="OpenExportFileButton"
@@ -77,8 +108,8 @@
                     />
                 </InfoBar.ActionButton>
             </InfoBar>
-            <InfoBar x:Name="ExportErrorBar" Severity="Error" IsOpen="False"  x:Uid="ExportFileErrorXAML" />
-
+            <InfoBar x:Name="ExportWarningBar" Severity="Warning" IsOpen="False"  x:Uid="ExportWarningBarTitle" IsClosable="False" />
+            <InfoBar x:Name="ExportErrorBar" Severity="Error" IsOpen="False"  x:Uid="ExportFileErrorXAML" IsClosable="False" />
         </StackPanel>
     </StackPanel>
 </Page>

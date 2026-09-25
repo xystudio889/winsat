@@ -411,4 +411,107 @@
   <data name="ExportFileErrorXAML.Title" xml:space="preserve">
     <value>Error while exporting, please retry</value>
   </data>
+  <data name="WSTExtDesc" xml:space="preserve">
+    <value>Windows Experience Index Export File</value>
+  </data>
+  <data name="HTMLExtDesc" xml:space="preserve">
+    <value>HTML Document</value>
+  </data>
+  <data name="PrevStep.Content" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="ExportButton.Content" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="SelectExportFile.Text" xml:space="preserve">
+    <value>Select the benchmark files to pack into the export file:</value>
+  </data>
+  <data name="SelectAllOptions.Content" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="NoFileSelected" xml:space="preserve">
+    <value>Please select at least one benchmark file.</value>
+  </data>
+  <data name="ExportWizardTitle" xml:space="preserve">
+    <value>Export wizard</value>
+  </data>
+  <data name="ExportWSTTitle.Text" xml:space="preserve">
+    <value>Export as a package</value>
+  </data>
+  <data name="ExportWSTDesc.Text" xml:space="preserve">
+    <value>The package can be imported as a benchmark file, but it is not easy
+to read.
+Note that only the advanced analysis files are exported, not the
+original scores.</value>
+  </data>
+  <data name="ExportHTMLTitle.Text" xml:space="preserve">
+    <value>Export as HTML</value>
+  </data>
+  <data name="ExportHTMLDesc.Text" xml:space="preserve">
+    <value>HTML files can be easily viewed in a browser or printed out.
+However, you will no longer be able to import this file.</value>
+  </data>
+  <data name="EasyViewCheckbox.Content" xml:space="preserve">
+    <value>Include a simplified score table</value>
+  </data>
+  <data name="ImportExport.Text" xml:space="preserve">
+    <value>Import and export</value>
+  </data>
+  <data name="ImportScore.Content" xml:space="preserve">
+    <value>Import a benchmark file</value>
+  </data>
+  <data name="ExportScore.Content" xml:space="preserve">
+    <value>Export a benchmark file</value>
+  </data>
+  <data name="ExportWarningBarTitle.Title" xml:space="preserve">
+    <value>Some files were skipped</value>
+  </data>
+  <data name="ImportWizardTitle" xml:space="preserve">
+    <value>Import wizard</value>
+  </data>
+  <data name="ImportFileTip.Text" xml:space="preserve">
+    <value>Select the .wst file to import:</value>
+  </data>
+  <data name="ImportPathBox.PlaceholderText" xml:space="preserve">
+    <value>Path of the .wst file</value>
+  </data>
+  <data name="ImportStartButton.Content" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="BrowseFileTip" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="ImportSuccessBarTitle.Title" xml:space="preserve">
+    <value>Imported successfully</value>
+  </data>
+  <data name="ImportWarningBarTitle.Title" xml:space="preserve">
+    <value>Some files were skipped</value>
+  </data>
+  <data name="ImportErrorBarTitle.Title" xml:space="preserve">
+    <value>Import failed</value>
+  </data>
+  <data name="ImportFileNotExist" xml:space="preserve">
+    <value>The file does not exist. Check the path and try again.</value>
+  </data>
+  <data name="ImportFileCorrupted" xml:space="preserve">
+    <value>The file is damaged, or is not a valid .wst package.</value>
+  </data>
+  <data name="ImportPermissionDenied" xml:space="preserve">
+    <value>Permission denied. Cannot read the package or write to the Scores folder.</value>
+  </data>
+  <data name="ImportNoFile" xml:space="preserve">
+    <value>The package does not contain any file.</value>
+  </data>
+  <data name="ImportDuplicateSkipped" xml:space="preserve">
+    <value>The following files are identical to existing scores and were skipped:</value>
+  </data>
+  <data name="ImportDuplicateReason" xml:space="preserve">
+    <value>{0} (identical to {1})</value>
+  </data>
+  <data name="ExportCard.Header" xml:space="preserve">
+    <value>Import or export result</value>
+  </data>
+  <data name="ExportCard.Description" xml:space="preserve">
+    <value>It can be used to do performance analysis for engineers, or to back up results.</value>
+  </data>
 </root>

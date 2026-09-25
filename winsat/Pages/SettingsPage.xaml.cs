@@ -215,16 +215,26 @@ public sealed partial class SettingsPage : Page
         ContentDialog dialog = new ContentDialog()
         {
             XamlRoot = this.Content.XamlRoot,
-            Title = "导出向导",
+            Title = Loader.GetString("ExportWizardTitle"),
             CloseButtonText = Loader.GetString("Close"),
-            Content = new ExportChoose(),
-            Width = 700,
-            Height = 450
+            Content = new ExportChoose()
         };
 
         await dialog.ShowAsync();
     }
 
+    private async void ImportButton_Click(object sender, RoutedEventArgs e)
+    {
+        ContentDialog dialog = new ContentDialog()
+        {
+            XamlRoot = this.Content.XamlRoot,
+            Title = Loader.GetString("ImportWizardTitle"),
+            CloseButtonText = Loader.GetString("Close"),
+            Content = new ImportChoose()
+        };
+
+        await dialog.ShowAsync();
+    }
 
     // ---- 许可证：展示 Assets/LICENSE 内容 ----
     private async void LicenseHyperlink_Click(object sender, RoutedEventArgs e)

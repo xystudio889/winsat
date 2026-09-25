@@ -100,13 +100,19 @@
                         </toolkit:SettingsExpander.Items>
                     </toolkit:SettingsExpander>
 
-                    <TextBlock Text="导入和导出" FontWeight="SemiBold" Margin="0,28,0,4" />
-                    <StackPanel Spacing="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="{ThemeResource OverlayCornerRadius}" Padding="16 8 0 8">
-                        <Button Content="导入跑分"/>
-                        <Button Content="导出跑分" Click="ExportButton_Click" />
-                    </StackPanel>
+                    <TextBlock x:Uid="ImportExport" FontWeight="SemiBold" Margin="0,28,0,4" />
 
-                        <!--  About  -->
+                    <toolkit:SettingsCard x:Name="settingsCard" x:Uid="ExportCard">
+                        <toolkit:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xEDE1;" />
+                        </toolkit:SettingsCard.HeaderIcon>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Uid="ImportScore" Click="ImportButton_Click" />
+                            <Button x:Uid="ExportScore" Click="ExportButton_Click" />
+                        </StackPanel>
+                    </toolkit:SettingsCard>
+
+                    <!--  About  -->
                     <TextBlock x:Uid="About" FontWeight="SemiBold" Margin="0,28,0,4" />
                     <toolkit:SettingsExpander
                         x:Uid="ProductInfo">

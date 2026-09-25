@@ -2,6 +2,7 @@
   "$requires": 8,
   "$locale": {
     "none": "无",
+    "warning_file_missing": "文件 '{0}' 不存在，已跳过",
     "mode_normal": "普通模式",
     "mode_combined": "合并 / 后缀 / 翻译模式",
     "mode_transpose": "转置模式",
@@ -16,7 +17,8 @@
     "error_parse_failed": "(来自{0}) 解析 \"{1}\" 遇到未处理的错误: {2}\\n{3}",
     "error_source_missing": "源文件路径 '{0}' 不存在",
     "error_symbol_missing": "符号文件路径 '{0}' 不存在",
-    "error_version": "符号文件版本高于解析器版本（符号文件: {0:.1f}，解析器: {1:.1f}）"
+    "error_version": "符号文件版本高于解析器版本（符号文件: {0:.1f}，解析器: {1:.1f}）",
+    "error_wst_failed": "写入 wst 包 '{0}' 失败: {1}"
   },
   "$defs": {
     "yesno": {

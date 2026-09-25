@@ -2,6 +2,7 @@
   "$requires": 8,
   "$locale": {
     "none": "None",
+    "warning_file_missing": "file '{0}' does not exist, skipped",
     "mode_normal": "normal mode",
     "mode_combined": "combined / suffix / translation mode",
     "mode_transpose": "transpose mode",
@@ -16,7 +17,8 @@
     "error_parse_failed": "(from {0}) failed to parse \"{1}\": {2}\\n{3}",
     "error_source_missing": "source file path '{0}' does not exist",
     "error_symbol_missing": "symbol file path '{0}' does not exist",
-    "error_version": "Symbol file version is greater than parser file version. (Symbol: {0:.1f}, Parser: {1:.1f})"
+    "error_version": "Symbol file version is greater than parser file version. (Symbol: {0:.1f}, Parser: {1:.1f})",
+    "error_wst_failed": "failed to write wst package '{0}': {1}"
   },
   "$defs": {
     "yesno": {

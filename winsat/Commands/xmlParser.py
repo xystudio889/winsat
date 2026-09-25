@@ -4,6 +4,7 @@ import json
 import re
 import os
 import sys
+import zipfile
 from traceback import format_exc
 from colorama import Fore, Style, init
 from pathlib import Path
@@ -48,6 +49,8 @@ L_ERROR_PARSE_FAILED = 'error_parse_failed'
 L_ERROR_SOURCE_MISSING = 'error_source_missing'
 L_ERROR_SYMBOL_MISSING = 'error_symbol_missing'
 L_ERROR_VERSION = 'error_version'
+L_WARNING_FILE_MISSING = 'warning_file_missing'
+L_ERROR_WST_FAILED = 'error_wst_failed'
 
 # 唯一无法从符号文件读取的兜底文案：符号文件读不出来或 $locale 缺键时，已经没有可用的
 # 文案表了，只能用英文兜底（内容与 en-US.json 的对应项保持一致）。
@@ -56,6 +59,8 @@ DEFAULT_TEXTS = {
     L_ERROR_LOCALE_MISSING: '"$locale" is missing the key "{0}"',
     L_ERROR_SOURCE_MISSING: "source file path '{0}' does not exist",
     L_ERROR_SYMBOL_MISSING: "symbol file path '{0}' does not exist",
+    L_WARNING_FILE_MISSING: "file '{0}' does not exist",
+    L_ERROR_WST_FAILED: "failed to write wst package '{0}': {1}",
 }
 
 AVAILABLE = {'zh-CN': 'zh-Hans-cn', 'en-US': 'en-US'}
@@ -97,6 +102,10 @@ def _fallback_text(locale, key):
 def _print_error(text, no_print):
     """错误行统一加协议前缀 <error>（C# 端按此前缀识别）。"""
     _print('<error>{0}'.format(text).replace('\n', '\\n'), no_print)
+
+def _print_warning(text, no_print):
+    """警告行统一加协议前缀 <warning>（C# 端按此前缀收集，换行同样转义成\\n）。"""
+    _print('<warning>{0}'.format(text).replace('\n', '\\n'), no_print)
 
 def _print(text, no_print):
     '''打印并添加输出'''
@@ -581,6 +590,57 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(str(base_html))
 
+def _wst_arcname(path, root=None):
+    """包内路径：单个文件用它的文件名；文件夹里的文件用「文件夹名/相对路径」。"""
+    if root is None:
+        return os.path.basename(path)
+    return '/'.join([os.path.basename(os.path.normpath(root)),
+                     os.path.relpath(path, root).replace('\\', '/')])
+
+
+def _wst_write(archive, source, arcname, added, locale):
+    """向包里写入一项；添加途中源文件被删除时只发警告，不中断其余项。"""
+    if arcname in added:
+        return  # 已存在的同名项（含包里原有的）不再添加，避免重复条目
+    try:
+        archive.write(source, arcname)
+    except FileNotFoundError:
+        # 添加途中被删除（或路径不可达）
+        _print_warning(_fallback_text(locale, L_WARNING_FILE_MISSING).format(source), False)
+    else:
+        added.add(arcname)
+
+
+def export_wst(output_path, paths, locale):
+    """把所有 paths 里的文件/文件夹追加进 output_path 指向的 wst（zip）包。
+
+    - 文件：包内路径就是文件名；文件夹：递归添加，包内路径为「文件夹名/相对路径」
+    - 源文件/文件夹不存在，或添加途中被删除：输出 <warning>，继续处理其余项
+    - 其它错误（如权限不足）：输出 <error> 并以退出码 1 结束
+    """
+    try:
+        # 'a'：用户传入的 wst 文件可能已存在（保存对话框会先创建出空文件）
+        with zipfile.ZipFile(output_path, 'a', zipfile.ZIP_DEFLATED) as archive:
+            # 包里已有的同名项不再重复添加（同名条目会让读取端不知道用哪一个）
+            added = set(archive.namelist())
+
+            for path in paths:
+                if not os.path.exists(path):
+                    _print_warning(_fallback_text(locale, L_WARNING_FILE_MISSING).format(path), False)
+                    continue
+
+                if os.path.isdir(path):
+                    for current, _, names in os.walk(path):
+                        for name in names:
+                            full = os.path.join(current, name)
+                            _wst_write(archive, full, _wst_arcname(full, path), added, locale)
+                else:
+                    _wst_write(archive, path, _wst_arcname(path), added, locale)
+    except (OSError, zipfile.BadZipFile) as e:
+        _print_error(_fallback_text(locale, L_ERROR_WST_FAILED).format(output_path, e), False)
+        sys.exit(1)
+
+
 def load_html_files(root: str = "a", encoding: str = "utf-8") -> dict[str, str]:
     """
     递归读取 root 目录下所有 .html 文件，返回 {相对路径(不含扩展名): 文件内容} 的字典。
@@ -701,19 +761,21 @@ def main():
             parser.error(f"Unrecognized arguments: {' '.join(unknown)}")
 
     # 收集所有路径并逐一检查；路径不对时尽量用符号文件里的文案报错
+    # （--wst 用不到 source/symbol，只借 symbol 读出 $locale 作为警告/错误的文案来源）
 
     locale = None
-    if not os.path.exists(args.source) or not os.path.exists(args.symbol):
+    if args.wst or not os.path.exists(args.source) or not os.path.exists(args.symbol):
         locale = _read_locale(args.symbol)
 
     all_exist = True
-    if not os.path.exists(args.source):
-        _print_error(_fallback_text(locale, L_ERROR_SOURCE_MISSING).format(args.source), False)
-        all_exist = False
+    if not args.wst:
+        if not os.path.exists(args.source):
+            _print_error(_fallback_text(locale, L_ERROR_SOURCE_MISSING).format(args.source), False)
+            all_exist = False
 
-    if not os.path.exists(args.symbol):
-        _print_error(_fallback_text(locale, L_ERROR_SYMBOL_MISSING).format(args.symbol), False)
-        all_exist = False
+        if not os.path.exists(args.symbol):
+            _print_error(_fallback_text(locale, L_ERROR_SYMBOL_MISSING).format(args.symbol), False)
+            all_exist = False
 
 
     if args.html:
@@ -727,7 +789,7 @@ def main():
 
         export_html(args.source, args.symbol, AVAILABLE, args.output_path, args.score)
     elif args.wst:
-        pass
+        export_wst(args.output_path, args.xml_path, locale)
     else:
         try:
             if (not os.path.isfile(args.source)) and (not os.path.isfile(args.symbol)):

@@ -411,4 +411,105 @@
   <data name="ExportFileErrorXAML.Title" xml:space="preserve">
     <value>导出时遇到错误，请重试</value>
   </data>
+  <data name="WSTExtDesc" xml:space="preserve">
+    <value>Windows 体验指数导出文件</value>
+  </data>
+  <data name="HTMLExtDesc" xml:space="preserve">
+    <value>HTML 文档</value>
+  </data>
+  <data name="PrevStep.Content" xml:space="preserve">
+    <value>上一步</value>
+  </data>
+  <data name="ExportButton.Content" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="SelectExportFile.Text" xml:space="preserve">
+    <value>选择要打包进导出文件的跑分文件：</value>
+  </data>
+  <data name="SelectAllOptions.Content" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="NoFileSelected" xml:space="preserve">
+    <value>请至少勾选一个跑分文件。</value>
+  </data>
+  <data name="ExportWizardTitle" xml:space="preserve">
+    <value>导出向导</value>
+  </data>
+  <data name="ExportWSTTitle.Text" xml:space="preserve">
+    <value>导出为包</value>
+  </data>
+  <data name="ExportWSTDesc.Text" xml:space="preserve">
+    <value>包可以用作导入跑分文件，比较难阅读。
+注意只会导出高级分析文件，而不会导出原分数。</value>
+  </data>
+  <data name="ExportHTMLTitle.Text" xml:space="preserve">
+    <value>导出为 HTML</value>
+  </data>
+  <data name="ExportHTMLDesc.Text" xml:space="preserve">
+    <value>HTML 文件可以很方便的用浏览器查阅或打印。
+但是这样你就不能再次导入此文件。</value>
+  </data>
+  <data name="EasyViewCheckbox.Content" xml:space="preserve">
+    <value>附带简易分数</value>
+  </data>
+  <data name="ImportExport.Text" xml:space="preserve">
+    <value>导入和导出</value>
+  </data>
+  <data name="ImportScore.Content" xml:space="preserve">
+    <value>导入跑分</value>
+  </data>
+  <data name="ExportScore.Content" xml:space="preserve">
+    <value>导出跑分</value>
+  </data>
+  <data name="ExportWarningBarTitle.Title" xml:space="preserve">
+    <value>有部分文件被跳过</value>
+  </data>
+  <data name="ImportWizardTitle" xml:space="preserve">
+    <value>导入向导</value>
+  </data>
+  <data name="ImportFileTip.Text" xml:space="preserve">
+    <value>选择要导入的 .wst 文件：</value>
+  </data>
+  <data name="ImportPathBox.PlaceholderText" xml:space="preserve">
+    <value>请输入或选择 .wst 文件路径</value>
+  </data>
+  <data name="ImportStartButton.Content" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="BrowseFileTip" xml:space="preserve">
+    <value>浏览…</value>
+  </data>
+  <data name="ImportSuccessBarTitle.Title" xml:space="preserve">
+    <value>导入成功</value>
+  </data>
+  <data name="ImportWarningBarTitle.Title" xml:space="preserve">
+    <value>有文件被跳过</value>
+  </data>
+  <data name="ImportErrorBarTitle.Title" xml:space="preserve">
+    <value>导入失败</value>
+  </data>
+  <data name="ImportFileNotExist" xml:space="preserve">
+    <value>文件不存在，请检查路径后重试。</value>
+  </data>
+  <data name="ImportFileCorrupted" xml:space="preserve">
+    <value>文件已损坏，或不是有效的 .wst 包。</value>
+  </data>
+  <data name="ImportPermissionDenied" xml:space="preserve">
+    <value>权限不足，无法读取导入文件或写入 Scores 目录。</value>
+  </data>
+  <data name="ImportNoFile" xml:space="preserve">
+    <value>导入文件里没有任何文件。</value>
+  </data>
+  <data name="ImportDuplicateSkipped" xml:space="preserve">
+    <value>以下文件与已有跑分完全相同，已跳过：</value>
+  </data>
+  <data name="ImportDuplicateReason" xml:space="preserve">
+    <value>{0}（与 {1} 相同）</value>
+  </data>
+  <data name="ExportCard.Header" xml:space="preserve">
+    <value>导入或导出结果</value>
+  </data>
+  <data name="ExportCard.Description" xml:space="preserve">
+    <value>可以用于给工程师进行性能分析，或者备份结果。</value>
+  </data>
 </root>

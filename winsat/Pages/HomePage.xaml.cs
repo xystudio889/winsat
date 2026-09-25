@@ -73,10 +73,20 @@ namespace winsat.pages
             if (FileComboBox.SelectedItem is FileInfo selectedFile)
             {
                 deletedFiles = String.Empty;
-                foreach (string line in FiltFile(selectedFile.FullName))
+
+                if (FileHelper.IsInScoresDir(selectedFile.FullName))
                 {
-                    deletedFiles += ("^\"" + line + "^\" ");
+                    // Scores 下导入的跑分：只删这一个文件（不动 DataStore 里同一份跑分的其它文件）
+                    deletedFiles = "^\"" + selectedFile.FullName + "^\" ";
                 }
+                else
+                {
+                    foreach (string line in FiltFile(selectedFile.FullName))
+                    {
+                        deletedFiles += ("^\"" + line + "^\" ");
+                    }
+                }
+
                 await deleteFile(deletedFiles);
                 RemoveButton.Flyout.Hide();
                 RefreshFileButton_Click(null, null);
@@ -233,18 +243,14 @@ namespace winsat.pages
                     return;
                 }
 
-                var files = await Task.Run(() =>
-                {
-                    var directoryInfo = new DirectoryInfo(FileHelper.winSatFilePath);
-                    return directoryInfo.GetFiles();
-                });
+                var files = await Task.Run(() => FileHelper.GetAnalyzableFiles()
+                    .Select(path => new FileInfo(path))
+                    .ToList());
 
                 Files.Clear();
                 foreach (var file in files)
                 {
-                    if(file.Name.Contains("Formal.Assessment")) {
-                        Files.Add(file);
-                    }
+                    Files.Add(file);
                 }
 
                 if (FileComboBox.Items.Count == 0) // 无项
@@ -298,8 +304,12 @@ namespace winsat.pages
         {
             if (FileComboBox.SelectedItem is FileInfo selectedFile)
             {
-                RemoveButton.IsEnabled = !(IoPath.GetFileName(selectedFile.FullName) == latestFile);
-                LatestWarning.Visibility = (IoPath.GetFileName(selectedFile.FullName) == latestFile) ? Visibility.Visible: Visibility.Collapsed;
+                // "最新文件不可删除"只针对 DataStore 里最新的那份；Scores 下导入的跑分永远可删
+                bool isProtectedLatest = !FileHelper.IsInScoresDir(selectedFile.FullName)
+                    && IoPath.GetFileName(selectedFile.FullName) == latestFile;
+
+                RemoveButton.IsEnabled = !isProtectedLatest;
+                LatestWarning.Visibility = isProtectedLatest ? Visibility.Visible : Visibility.Collapsed;
 
                 LoadingPanel.Visibility = Visibility.Visible; // 显示加载动画
                 LoadingRing.IsActive = true;

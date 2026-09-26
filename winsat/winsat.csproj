@@ -98,8 +98,8 @@
 
 	<!-- Publish Properties -->
 	<PropertyGroup>
-		<Version>2.0.12</Version>
-		<AssemblyVersion>$(Version).713</AssemblyVersion>
+		<Version>2.0.13</Version>
+		<AssemblyVersion>$(Version).726</AssemblyVersion>
 		<AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
 		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>

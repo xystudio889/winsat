@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 init(autoreset=True)  # 重置颜色设置，避免在终端中出现颜色冲突
 
-__version__ = 8.0
+__version__ = 8.1
 cdata_regex = re.compile(r'<!\[CDATA\[\s+(.+?)\s+\]\]>', re.DOTALL)
 
 # 特殊值：不是 xpath，而是直接产生结构化标记（键名只用于区分，spacing 不需要键名）

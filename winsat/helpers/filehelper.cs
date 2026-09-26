@@ -13,7 +13,75 @@ namespace winsat.helpers
     {
         public static string winSatFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Performance", "WinSAT", "DataStore");
         public static string installDir = AppDomain.CurrentDomain.BaseDirectory; // 软件安装路径
-        public static string scoresDir = Path.Combine(installDir, "Scores"); // 导入进来的跑分
+
+        /// <summary>
+        /// 导入跑分的存放候选（按优先级）：
+        /// 1) 安装目录\Scores —— 便携/非打包安装，数据跟着程序走
+        /// 2) 应用本地数据目录\Scores —— MSIX（打包）安装，安装目录只读，这里是唯一可写处
+        /// 3) %LOCALAPPDATA%\winsat\Scores —— 非打包但安装目录不可写时的兜底
+        /// </summary>
+        private static readonly List<string> scoresDirs = BuildScoresDirs();
+
+        private static string? writableScoresDir;
+
+        /// <summary>写入导入跑分用的 Scores 目录：候选里第一个真正可写的。</summary>
+        public static string scoresDir
+        {
+            get
+            {
+                writableScoresDir ??= scoresDirs.FirstOrDefault(IsWritableDirectory) ?? scoresDirs[^1];
+                return writableScoresDir;
+            }
+        }
+
+        private static List<string> BuildScoresDirs()
+        {
+            List<string> dirs = new() { Path.Combine(installDir, "Scores") };
+
+            try
+            {
+                // 打包安装时可用：%LOCALAPPDATA%\Packages\<包族名>\LocalState\Scores
+                dirs.Add(Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "Scores"));
+            }
+            catch (Exception)
+            {
+                // 非打包应用没有 ApplicationData，跳过这个候选
+            }
+
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!string.IsNullOrEmpty(localAppData))
+            {
+                dirs.Add(Path.Combine(localAppData, "winsat", "Scores"));
+            }
+
+            return dirs
+                .Where(d => !string.IsNullOrEmpty(d))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        /// <summary>
+        /// 目录是否可写：先尝试创建，再真正写一个临时文件探一下
+        /// （目录已存在但只读时 CreateDirectory 不会报错）。
+        /// </summary>
+        private static bool IsWritableDirectory(string directory)
+        {
+            try
+            {
+                Directory.CreateDirectory(directory);
+
+                string probe = Path.Combine(directory, $".winsat-probe-{Guid.NewGuid():N}.tmp");
+                using (File.Create(probe)) { }
+                File.Delete(probe);
+
+                return true;
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException
+                                       || ex is NotSupportedException || ex is ArgumentException)
+            {
+                return false;
+            }
+        }
 
         public static List<String> GetFileTimeList(string directory)
         {
@@ -53,9 +121,9 @@ namespace winsat.helpers
         }
 
         /// <summary>
-        /// 是否为 Scores 目录（导入进来的跑分）里的文件。
+        /// 是否为 Scores 目录（导入进来的跑分）里的文件（含所有候选位置）。
         /// </summary>
-        public static bool IsInScoresDir(string path) => IsInDirectory(path, scoresDir);
+        public static bool IsInScoresDir(string path) => scoresDirs.Any(dir => IsInDirectory(path, dir));
 
         /// <summary>
         /// 能否被分析/展示的文件名：DataStore 下只有名字含 "Formal.Assessment" 的才是一份完整跑分；
@@ -88,9 +156,13 @@ namespace winsat.helpers
                     files.AddRange(Directory.GetFiles(winSatFilePath).Where(IsAnalyzableFile));
                 }
 
-                if (Directory.Exists(scoresDir))
+                // 所有候选 Scores 目录都扫，位置变更后旧数据也不会“消失”
+                foreach (string dir in scoresDirs)
                 {
-                    files.AddRange(Directory.GetFiles(scoresDir).Where(IsAnalyzableFile));
+                    if (Directory.Exists(dir))
+                    {
+                        files.AddRange(Directory.GetFiles(dir).Where(IsAnalyzableFile));
+                    }
                 }
             }
             catch (UnauthorizedAccessException)

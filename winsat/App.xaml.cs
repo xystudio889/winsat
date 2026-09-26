@@ -41,6 +41,9 @@ namespace winsat
             // 语言必须早于任何资源加载生效，否则界面仍会使用上一次的语言。
             AppLanguage.ApplySavedLanguage();
             InitializeComponent();
+
+            // 尽早挂上全局异常监听（UI 线程 / 后台线程 / 未观察的 Task 异常）。
+            GlobalExceptionHandler.Register();
         }
 
         /// <summary>

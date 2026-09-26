@@ -464,14 +464,14 @@ namespace winsat.pages
                     var cmdlines = await Commands.Execute(
                         "python.exe",
                         $"\"{Path.Combine(FileHelper.installDir, "Commands", "xmlParser.py")}\" " +
-                        $"\"\" " +
+                        $"\"a\" " +
                         $"\"{symbolPath}\" " +
                         $"--wst \"{result.Path}\" " +
                         fileArgs);
 #else
                     var cmdlines = await Commands.Execute(
                         $"\"{Path.Combine(FileHelper.installDir, "Commands", "xmlParser.exe")}\"",
-                        $"\"\" " +
+                        $"\"a\" " +
                         $"\"{symbolPath}\" " +
                         $"--wst \"{result.Path}\" " +
                         fileArgs);
@@ -489,12 +489,12 @@ namespace winsat.pages
                     ExportWarningBar.IsOpen = showWarning;
                     ExportWarningBar.Message = warnMsg;
 
+                    // 包导出成功（警告信息可以与成功提示并存）
+                    WSTExport.Visibility = Visibility.Collapsed;
+                    ExportEnd.Visibility = Visibility.Visible;
+
                     if (!showError)
                     {
-                        // 包导出成功（警告信息可以与成功提示并存）
-                        WSTExport.Visibility = Visibility.Collapsed;
-                        ExportEnd.Visibility = Visibility.Visible;
-
                         ExportSuccessBar.Message = Loader.GetString("ExportSuccessBarTitleCS") + result.Path;
                         ExportSuccessBar.IsOpen = true;
 

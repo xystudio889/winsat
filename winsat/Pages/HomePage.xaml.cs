@@ -128,23 +128,68 @@ namespace winsat.pages
             if (stringList == null || stringList.Count == 0)
                 throw new ArgumentException("列表不能为空");
 
-            // 1. 获取最后一项
+            // 1. 获取最后一项（列表按修改时间升序，最后一项即最新文件）。
+            //    调用方可能传完整路径，也可能只传文件名，这里统一按文件名解析。
             string lastItem = stringList.Last();
+            string fileName = IoPath.GetFileName(lastItem);
 
-            // 2. 按空格分割，取第一部分（日期时间字符串）
-            string dateTimePart = lastItem.Split(' ')[0] + " " + lastItem.Split(' ')[1];
-
-            // 3. 解析为 DateTime（格式：yyyy-MM-dd HH.mm.ss.fff）
-            string format = "yyyy-MM-dd HH.mm.ss.fff";
-            if (!DateTime.TryParseExact(dateTimePart, format, CultureInfo.InvariantCulture,
-                                        DateTimeStyles.None, out DateTime parsedDate))
+            // 2. 优先从文件名里解析时间，例如 "2025-08-24 16.32.19.423.winsat.etl"。
+            DateTime time;
+            if (TryParseDateTimeFromName(fileName, out DateTime fromName))
             {
-                throw new FormatException($"无法解析日期时间：{dateTimePart}");
+                time = fromName;
+            }
+            else if (File.Exists(lastItem))
+            {
+                // 3. 文件名里没有可解析的时间（例如 winsat.log，或其它机型的命名格式），
+                //    退回文件修改时间——不同机型 ETL 命名格式不一样，这里不能再抛异常。
+                time = File.GetLastWriteTime(lastItem);
+            }
+            else
+            {
+                // 连文件都不存在（只给了文件名）：原样返回，避免崩溃。
+                return fileName;
             }
 
             // 4. 按系统当前区域设置格式化，使用 "G" 标准格式（含秒）
-            string formatted = parsedDate.ToString("G", CultureInfo.CurrentCulture);
-            return formatted;
+            return time.ToString("G", CultureInfo.CurrentCulture);
+        }
+
+        /// <summary>
+        /// 从文件名解析时间。ETL 文件名形如 "2025-08-24 16.32.19.423.winsat.etl"：
+        /// 日期部分用系统区域格式（yyyy-MM-dd、M-d-yyyy 等都可能），时间部分固定为 "HH.mm.ss.fff"，
+        /// 后面还可能跟着 ".winsat.etl" 等扩展名。解析不出来时返回 false，由调用方兜底。
+        /// </summary>
+        private static bool TryParseDateTimeFromName(string fileName, out DateTime result)
+        {
+            result = default;
+
+            // 日期与时间用空格分隔，时间里的 '.' 同时也是扩展名分隔符，故按空格切成两段。
+            string[] tokens = fileName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length < 2)
+                return false;
+
+            if (!DateTime.TryParse(tokens[0], CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) &&
+                !DateTime.TryParse(tokens[0], CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+                return false;
+
+            // 时间部分取前 4 段（时.分.秒.毫秒），忽略后面 ".winsat"、".etl" 等。
+            string[] timeParts = tokens[1].Split('.');
+            if (timeParts.Length < 4)
+                return false;
+
+            if (!int.TryParse(timeParts[0], out int hour) || hour > 23 ||
+                !int.TryParse(timeParts[1], out int minute) || minute > 59 ||
+                !int.TryParse(timeParts[2], out int second) || second > 59)
+                return false;
+
+            string fraction = timeParts[3];
+            if (fraction.Length == 0 || !fraction.All(char.IsDigit))
+                return false;
+
+            int millisecond = int.Parse(fraction.PadRight(3, '0')[..3]);
+            result = new DateTime(date.Year, date.Month, date.Day, hour, minute, second, millisecond);
+            return true;
         }
 
         /// <summary>
@@ -511,7 +556,8 @@ namespace winsat.pages
                     case "1":
                         LatestTip.Visibility = Visibility.Visible;
                         LatestUpdateTime.Visibility = Visibility.Visible;
-                        LatestUpdateTime.Text = string.Format(Loader.GetString("LastUpdateTime"), FormatDateTime(FileHelper.GetFileTimeList(FileHelper.winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList()));
+                        // 传完整路径：文件名解析不出来时还能退回文件修改时间
+                        LatestUpdateTime.Text = string.Format(Loader.GetString("LastUpdateTime"), FormatDateTime(FileHelper.GetFileTimeList(FileHelper.winSatFilePath)));
                         break;
                     case "2":
                         WinSatTip.Title = Loader.GetString("HardwareChangedTitle");

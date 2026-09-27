@@ -512,4 +512,10 @@
   <data name="ExportCard.Description" xml:space="preserve">
     <value>可以用于给工程师进行性能分析，或者备份结果。</value>
   </data>
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows 体验指数</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>使用WinUI 3 制作的 Windows 跑分工具</value>
+  </data>
 </root>

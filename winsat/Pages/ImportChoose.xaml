@@ -17,7 +17,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="ImportPathBox" x:Uid="ImportPathBox" />
+                <TextBox x:Name="ImportPathBox" x:Uid="ImportPathBox" TextChanged="ImportPathBox_TextChanged" />
                 <Button x:Name="BrowseButton" Grid.Column="1" Click="BrowseButton_Click">
                     <FontIcon Glyph="&#xE8A5;" />
                 </Button>
@@ -26,6 +26,7 @@
                 <Button x:Name="ImportButton"
                         x:Uid="ImportStartButton"
                         Click="ImportButton_Click"
+                        IsEnabled="False"
                         Style="{StaticResource AccentButtonStyle}" />
             </StackPanel>
         </StackPanel>

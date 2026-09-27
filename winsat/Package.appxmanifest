@@ -11,13 +11,13 @@
 
   <Identity
     Name="xystudio.winsat"
-    Publisher="CN=X1/admin"
-    Version="2.0.13.726" />
+    Publisher="CN=XyStudio, O=XyStudio, L=Shanghai, S=Shanghai, C=CN"
+    Version="2.0.13.745" />
 
   <mp:PhoneIdentity PhoneProductId="98ff62da-6fa9-43f8-9474-e7509cb7513f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Windows 体验指数</DisplayName>
+    <DisplayName>ms-resource:AppDisplayName</DisplayName>
     <PublisherDisplayName>xystudio</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -36,8 +36,8 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$" >
       <uap:VisualElements
-        DisplayName="Windows 体验指数"
-        Description="使用WinUI 3 制作的 Windows 跑分工具"
+        DisplayName="ms-resource:AppDisplayName"
+        Description="ms-resource:AppDescription"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

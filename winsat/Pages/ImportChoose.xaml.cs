@@ -20,11 +20,15 @@ namespace winsat.pages
     /// </summary>
     public sealed partial class ImportChoose : Page
     {
+        private bool importing; // 导入进行中：期间一律禁用“导入”按钮
+
         public ImportChoose()
         {
             InitializeComponent();
 
             ToolTipService.SetToolTip(BrowseButton, Loader.GetString("BrowseFileTip"));
+
+            UpdateImportButtonState();
         }
 
         /// <summary>选择一个 wst 包，填进输入框。</summary>
@@ -45,6 +49,18 @@ namespace winsat.pages
             }
         }
 
+        private void ImportPathBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateImportButtonState();
+
+        /// <summary>
+        /// 未填写/选择文件时禁用“导入”按钮（只判断是否为空，路径是否有效仍由点击后的提示处理）
+        /// </summary>
+        private void UpdateImportButtonState()
+        {
+            if (ImportButton is null || ImportPathBox is null) return;
+
+            ImportButton.IsEnabled = !importing && !string.IsNullOrWhiteSpace(ImportPathBox.Text);
+        }
+
         private async void ImportButton_Click(object sender, RoutedEventArgs e)
         {
             HideResult();
@@ -57,6 +73,7 @@ namespace winsat.pages
                 return;
             }
 
+            importing = true;
             ImportButton.IsEnabled = false;
             ImportWorkingBar.Visibility = Visibility.Visible;
             ImportWorkingRing.IsActive = true;
@@ -106,7 +123,8 @@ namespace winsat.pages
             }
             finally
             {
-                ImportButton.IsEnabled = true;
+                importing = false;
+                UpdateImportButtonState();
                 ImportWorkingBar.Visibility = Visibility.Collapsed;
                 ImportWorkingRing.IsActive = false;
             }

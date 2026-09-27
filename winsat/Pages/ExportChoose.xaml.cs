@@ -66,12 +66,49 @@ namespace winsat.pages
                     LoadingFileErrorBar.Message = Loader.GetString("FileNotExist");
                     LoadingFileErrorBar.IsOpen = true;
                     BottomBar.Visibility = Visibility.Collapsed;
-                    return;
                 }
+            }
+
+            // 未选择（显示占位符）或所选文件不存在时，禁用“附带简易分数”与“导出”
+            UpdateHtmlExportState();
+        }
+
+        /// <summary>
+        /// 是否已选中一个真实存在的跑分文件（否则选择框显示占位符）
+        /// </summary>
+        private bool HasValidSelectedFile() =>
+            FileComboBox.SelectedItem is FileInfo file && File.Exists(file.FullName);
+
+        /// <summary>
+        /// HTML 模式：没有选中文件时禁用“附带简易分数”选项与“导出”按钮
+        /// </summary>
+        private void UpdateHtmlExportState()
+        {
+            if (EasyViewCheckbox is null) return;
+
+            EasyViewCheckbox.IsEnabled = HasValidSelectedFile();
+            UpdateExportButtonState();
+        }
+
+        /// <summary>
+        /// 按当前模式与实际选择情况刷新“导出”按钮：
+        /// HTML 模式要求选中存在的文件，包模式要求至少勾选一个文件
+        /// </summary>
+        private void UpdateExportButtonState()
+        {
+            if (ExportButton is null || HTMLExport is null || WSTExport is null) return;
+
+            if (HTMLExport.Visibility == Visibility.Visible)
+            {
+                ExportButton.IsEnabled = HasValidSelectedFile();
+            }
+            else if (WSTExport.Visibility == Visibility.Visible)
+            {
+                ExportButton.IsEnabled = GetCheckedWstFiles().Count > 0;
             }
             else
             {
-                return;
+                ExportButton.IsEnabled = true;
             }
         }
 
@@ -88,6 +125,7 @@ namespace winsat.pages
             {
                 if (!Directory.Exists(winSatFilePath))
                 {
+                    UpdateHtmlExportState();
                     return;
                 }
 
@@ -122,6 +160,9 @@ namespace winsat.pages
                 FileComboBox.SelectedIndex = FileComboBox.Items.Count - 1; // 重置
                 lastIndex = FileComboBox.SelectedIndex;
             }
+
+            // 默认选中项可能没有触发 SelectionChanged（索引未变化或列表为空），这里统一刷新一次
+            UpdateHtmlExportState();
         }
 
         private bool syncingWstOptions; // true 表示正在由代码同步勾选状态，需忽略随之触发的 Checked/Unchecked/Indeterminate
@@ -146,6 +187,9 @@ namespace winsat.pages
         private async Task ReloadFileListAsync()
         {
             int version = ++wstReloadVersion;
+
+            // 列表构建完成前不允许导出，避免用到上一次的勾选结果
+            if (ExportButton is not null) ExportButton.IsEnabled = false;
 
             // 记住刷新前的勾选状态（按文件完整路径），刷新后仍存在的文件沿用旧状态，新文件默认勾选
             var checkedBefore = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -193,6 +237,8 @@ namespace winsat.pages
             allOptionsState = files.Count > 0;
             syncingWstOptions = false;
             wstListReady = true;
+
+            UpdateExportButtonState();
         }
 
         /// <summary>
@@ -252,6 +298,8 @@ namespace winsat.pages
             allOptionsState = isChecked;
 
             syncingWstOptions = false;
+
+            UpdateExportButtonState();
         }
 
         /// <summary>
@@ -282,6 +330,8 @@ namespace winsat.pages
             OptionsAllCheckBox.IsChecked = state;
             allOptionsState = state;
             syncingWstOptions = false;
+
+            UpdateExportButtonState();
         }
 
         private void HTMLExportShow(object sender, RoutedEventArgs e)
@@ -295,6 +345,9 @@ namespace winsat.pages
             WorkingRing.IsActive = false;
 
             ControlBar.Visibility = Visibility.Visible;
+
+            // 未选择文件时“附带简易分数”与“导出”均为禁用状态
+            UpdateHtmlExportState();
         }
 
         private void WSTExportShow(object sender, RoutedEventArgs e)
@@ -307,9 +360,10 @@ namespace winsat.pages
             WorkingBar.Visibility = Visibility.Collapsed;
             WorkingRing.IsActive = false;
             WSTRefreshComplete.Visibility = Visibility.Collapsed;
-            ReloadFileList();
 
             ControlBar.Visibility = Visibility.Visible;
+
+            ReloadFileList(); // 加载完成后按勾选情况刷新“导出”按钮
         }
 
         private void OnPrevPage(object sender, RoutedEventArgs e)

@@ -514,4 +514,10 @@ However, you will no longer be able to import this file.</value>
   <data name="ExportCard.Description" xml:space="preserve">
     <value>It can be used to do performance analysis for engineers, or to back up results.</value>
   </data>
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows Experience Index</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>A Windows benchmarking tool made with WinUI 3</value>
+  </data>
 </root>

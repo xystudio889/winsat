@@ -99,13 +99,13 @@
 	<!-- Publish Properties -->
 	<PropertyGroup>
 		<Version>2.0.13</Version>
-		<AssemblyVersion>$(Version).745</AssemblyVersion>
+		<AssemblyVersion>$(Version).747</AssemblyVersion>
 		<AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
 		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
 		<PublishTrimmed>False</PublishTrimmed>
 		<DefaultLanguage>zh-CN</DefaultLanguage>
-		<PackageCertificateKeyFile>AppPackages\winsat_2.0.13.744_x64_Test\MyApp.pfx</PackageCertificateKeyFile>
+		<PackageCertificateKeyFile>winsat_TemporaryKey.pfx</PackageCertificateKeyFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
@@ -114,7 +114,7 @@
 		<AppxBundle>Never</AppxBundle>
 		<AppInstallerUri>F:\code\C\C#\winsat\winsat</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PackageCertificateThumbprint>D5D3300631F96603C0586235ED9C43946C36BC3E</PackageCertificateThumbprint>
+		<PackageCertificateThumbprint>38BB505B4128CDCA4AEC833CE44E7375F4884618</PackageCertificateThumbprint>
 	</PropertyGroup>
 </Project>
 

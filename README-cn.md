@@ -11,7 +11,7 @@
 <div align="center" style="line-height: 1;">
   <a href="./README.md"><img
     src="https://img.shields.io/badge/language-English-536af5?color=781ff1&logoColor=white"/></a>
-  <a href="./README-CN.md"><img
+  <a href="./README-cn.md"><img
     src="https://img.shields.io/badge/简体中文-536af5?color=ff0000&logoColor=white"/></a>
 </div>
 <br />

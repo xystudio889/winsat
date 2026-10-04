@@ -28,6 +28,8 @@ A recreation of the old Windows benchmarking tool, written with WinUI 3.
 
 > You can view [video.mp4](./video.mp4) for a visual guide to the installation.
 
+> If any operations are blocked by antivirus software, please add them to the whitelist
+
 ## Usage
 
 1. Launch the app from the "Start Menu".

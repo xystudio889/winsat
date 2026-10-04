@@ -49,108 +49,16 @@
                     />
                 </InfoBar.ActionButton>
             </InfoBar>
-            <!--
-                主窗口（分数表）
-                列：① 组件（固定 128）｜② 评分的项目（占满剩余）｜③ 子分数（真实大小）｜④ 基本分数（内容 96 + 左右各 16）
-                行：0 顶部分隔线｜1 表头｜2 底部分隔线｜3~7 五行数据
-                竖向间距：表头 8、底部分隔线 24、数据行与行之间 30
-            -->
+            <!-- 主窗口 -->
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <!-- ① 组件：固定 128px -->
-                    <ColumnDefinition Width="128" />
-                    <!-- ② 评分的项目：除去其它列之后剩下的全部空间 -->
-                    <ColumnDefinition Width="*" />
-                    <!-- ③ 子分数：真实大小 -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- ④ 基本分数：内容 96 + 左右各 16 -->
-                    <ColumnDefinition Width="Auto" MinWidth="128" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />  <!-- 0 顶部分隔线 -->
-                    <RowDefinition Height="Auto" />  <!-- 1 表头 -->
-                    <RowDefinition Height="Auto" />  <!-- 2 底部分隔线 -->
-                    <RowDefinition Height="Auto" />  <!-- 3 处理器 -->
-                    <RowDefinition Height="Auto" />  <!-- 4 内存 -->
-                    <RowDefinition Height="Auto" />  <!-- 5 图形 -->
-                    <RowDefinition Height="Auto" />  <!-- 6 游戏图形 -->
-                    <RowDefinition Height="Auto" />  <!-- 7 主硬盘 -->
-                </Grid.RowDefinitions>
-
-                <!-- 分隔线：撑满父元件宽度 -->
-                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Height="3"
-                        Background="{ThemeResource ControlStrokeColorSecondaryBrush}" />
-                <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Height="3" Margin="0,8,0,0"
-                        Background="{ThemeResource ControlStrokeColorSecondaryBrush}" />
-
-                <!-- 表头 -->
-                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="Component" FontWeight="Bold"
-                           Margin="0,8,0,0" HorizontalAlignment="Left" />
-                <TextBlock Grid.Row="1" Grid.Column="1" x:Uid="ScoredItems"
-                           Margin="0,8,0,0" HorizontalAlignment="Left" />
-                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="SubScore"
-                           Margin="0,8,0,0" HorizontalAlignment="Center" />
-                <TextBlock Grid.Row="1" Grid.Column="3" x:Uid="BaseScore"
-                           Margin="0,8,0,0" HorizontalAlignment="Center" />
-
-                <!-- ① 组件 -->
-                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="Processor" FontWeight="Bold" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="MemoryRAM" FontWeight="Bold" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="5" Grid.Column="0" x:Uid="Graphics" FontWeight="Bold" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="6" Grid.Column="0" x:Uid="GamingGraphics" FontWeight="Bold" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="7" Grid.Column="0" x:Uid="PrimaryDisk" FontWeight="Bold" Margin="0,10,0,0" />
-
-                <!-- ② 评分的项目 -->
-                <TextBlock Grid.Row="3" Grid.Column="1" x:Uid="CalcPerSecond" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="4" Grid.Column="1" x:Uid="MemoryOps" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="5" Grid.Column="1" x:Uid="DesktopGraphics" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="6" Grid.Column="1" x:Uid="GamingGraphicsDesc" Margin="0,10,0,0" />
-                <TextBlock Grid.Row="7" Grid.Column="1" x:Uid="DiskTransferRate" Margin="0,10,0,0" />
-
-                <!-- ③ 子分数：并列最低分的行显示「左边两角圆角、右边无圆角」的背景
-                     （ControlCornerRadius = 4，左侧两角为 4，右侧两角为 0） -->
-                <Grid Grid.Row="3" Grid.Column="2" Margin="0,10,0,0">
-                    <Border x:Name="CPUScoreBackground" Visibility="Collapsed"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
-                            CornerRadius="4,0,0,4" />
-                    <TextBlock x:Name="CPUScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
-                </Grid>
-                <Grid Grid.Row="4" Grid.Column="2" Margin="0,10,0,0">
-                    <Border x:Name="MemoryScoreBackground" Visibility="Collapsed"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
-                            CornerRadius="4,0,0,4" />
-                    <TextBlock x:Name="MemoryScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
-                </Grid>
-                <Grid Grid.Row="5" Grid.Column="2" Margin="0,10,0,0">
-                    <Border x:Name="GraphicsScoreBackground" Visibility="Collapsed"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
-                            CornerRadius="4,0,0,4" />
-                    <TextBlock x:Name="GraphicsScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
-                </Grid>
-                <Grid Grid.Row="6" Grid.Column="2" Margin="0,10,0,0">
-                    <Border x:Name="D3DScoreBackground" Visibility="Collapsed"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
-                            CornerRadius="4,0,0,4" />
-                    <TextBlock x:Name="D3DScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
-                </Grid>
-                <Grid Grid.Row="7" Grid.Column="2" Margin="0,10,0,0">
-                    <Border x:Name="DiskScoreBackground" Visibility="Collapsed"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
-                            CornerRadius="4,0,0,4" />
-                    <TextBlock x:Name="DiskScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
-                </Grid>
-
-                <!-- ④ 基本分数：除标题行外，整列一块无圆角背景（内容 96，左右各留 16） -->
-                <Border x:Name="TotalScorePanel" Grid.Row="3" Grid.RowSpan="5" Grid.Column="3"
-                        Margin="0,0,0,0"
-                        Background="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="5">
+                <!-- 分数方框 -->
+                <Canvas x:Name="RectangleCanvas">
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="550" Canvas.Top="50" >
                         <Border x:Name="RectangleBackground"
-                                Width="48"
-                                Height="48"
-                                HorizontalAlignment="Center"
-                                Background="{ThemeResource AccentFillColorDefaultBrush}"
-                                CornerRadius="{StaticResource ControlCornerRadius}">
+                            Background="{ThemeResource AccentFillColorDefaultBrush}" 
+                            CornerRadius="{StaticResource OverlayCornerRadius}" 
+                            Width="48" 
+                            Height="48">
                             <TextBlock
                                 x:Name="WinSPRLevel"
                                 HorizontalAlignment="Center"
@@ -160,11 +68,36 @@
                                 FontWeight="Bold"
                             />
                         </Border>
-                        <TextBlock x:Name="MinScoreText" x:Uid="subScoreTip"
-                                   Width="96" TextAlignment="Center" TextWrapping="Wrap"
-                                   HorizontalAlignment="Center" />
-                    </StackPanel>
-                </Border>
+                        <TextBlock x:Name="MinScoreText" x:Uid="subScoreTip" HorizontalAlignment="Center" Margin="0 78 0 0" />
+                    </Grid>
+                </Canvas>
+                <Line Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                      X1="-10" Y1="0"
+                      X2="790" Y2="0"
+                      StrokeThickness="3"  Margin = "0 0 0 0" />
+                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="Component" Margin = "0 8 0 0" FontWeight="Bold" />
+                <TextBlock Grid.Row="1" Grid.Column="1" x:Uid="ScoredItems" Margin = "140 8 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="SubScore" Margin = "460 8 0 0"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" x:Uid="BaseScore" Margin = "590 8 0 0"/>
+                <Line Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
+                      X1="-10" Y1="0"
+                      X2="790" Y2="0"
+                      StrokeThickness="3"  Margin = "0 36 0 0" />
+                <TextBlock Grid.Row = "2" Grid.Column="0" x:Uid="Processor"  FontWeight="Bold" Margin = "0 45 0 0"/>
+                <TextBlock Grid.Row = "3" Grid.Column="0" x:Uid="GamingGraphics"  FontWeight="Bold" Margin = "0 135 0 0"/>
+                <TextBlock Grid.Row = "4" Grid.Column="0" x:Uid="PrimaryDisk"  FontWeight="Bold" Margin = "0 165 0 0"/>
+                <TextBlock Grid.Row = "5" Grid.Column="0" x:Uid="Graphics"  FontWeight="Bold" Margin = "0 105 0 0"/>
+                <TextBlock Grid.Row = "6" Grid.Column="0" x:Uid="MemoryRAM" FontWeight="Bold" Margin = "0 75 0 0"/>
+                <TextBlock Grid.Row = "2" Grid.Column="1" x:Uid="CalcPerSecond" Margin = "140 45 0 0"/>
+                <TextBlock Grid.Row = "3" Grid.Column="1" x:Uid="GamingGraphicsDesc" Margin = "140 135 0 0"/>
+                <TextBlock Grid.Row = "4" Grid.Column="1" x:Uid="DiskTransferRate" Margin = "140 165 0 0"/>
+                <TextBlock Grid.Row = "5" Grid.Column="1" x:Uid="DesktopGraphics" Margin = "140 105 0 0"/>
+                <TextBlock Grid.Row = "6" Grid.Column="1" x:Uid="MemoryOps" Margin = "140 75 0 0"/>
+                <TextBlock Grid.Row = "2" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 45 0 0" x:Name = "CPUScore" />
+                <TextBlock Grid.Row = "3" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 135 0 0" x:Name = "D3DScore" />
+                <TextBlock Grid.Row = "4" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 165 0 0" x:Name = "DiskScore" />
+                <TextBlock Grid.Row = "5" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 105 0 0" x:Name = "GraphicsScore" />
+                <TextBlock Grid.Row = "6" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 75 0 0" x:Name = "MemoryScore" />
             </Grid>
 
             <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin = "0 24 0 8" HorizontalAlignment="Stretch">
@@ -182,7 +115,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" x:Name="LatestUpdateTime" Margin = "0 4 0 0" />
-                    <HyperlinkButton Grid.Column="1" x:Uid="ReloadAssessment" Click="GetScore" />
+                    <HyperlinkButton Grid.Column="1" x:Uid="ReloadAssessment" Click="GetScore" Margin="566 4 0 0" />
                 </Grid>
             </StackPanel>
 

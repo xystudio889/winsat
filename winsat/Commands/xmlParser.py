@@ -77,7 +77,7 @@ def createTemplate(key: str) -> BeautifulSoup:
         return HTML_FILE[key].__copy__()
     except KeyError:
         _print_error(f'HTML 模板不存在: {key}', False)
-        exit(0)
+        sys.exit(0)
 
 def _locale_text(locale, key):
     """按键名从符号文件的 $locale 取文案；取不到即符号文件写法错误。"""
@@ -507,9 +507,9 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
         # 分数表：模板里若已内联一份（方便直接用浏览器预览），就复用它；
         # 否则用 grid.html 追加一份。两个模板的内容保持一致。
         grid = base_html.find('div', class_='grid')
-        if grid is None:
+        grid_inlined = grid is not None
+        if not grid_inlined:
             grid = createTemplate('grid')
-            content.append(grid) # 表格
 
         cpu_score = grid.find('div', id='CPUScore') # 表格
         ram_score = grid.find('div', id='RAMScore')
@@ -544,12 +544,18 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
         disk_score.string = str(args.disk_score)
         total_score.string = str(arg_total_score)
 
+        # 这里才能 append：bs4 的 append 会把节点从原来的树里搬走（原树会变空），
+        # 先 append 的话上面那些 find(id=...) 就都找不到了。
+        if not grid_inlined:
+            content.append(grid) # 表格
+
         # 高级信息（expander）：同样优先复用模板里已内联的那一份
         expander = base_html.find('div', class_='expander')
-        if expander is None:
+        expander_inlined = expander is not None
+        if not expander_inlined:
             expander = createTemplate('expander')
-            content.append(expander)
 
+        # 同样要先把 add_content 取出来，再（在下面循环里）把 expander 追加进 content
         add_content = expander.find('div', class_="expander-body") # 设置添加组件
     else:
         # 不导出分数表：把模板里内联的分数表 / 高级信息去掉
@@ -613,7 +619,7 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
                 print(f'<error>未知的文件值：{line}')
                 return
         add_content.append(card)
-        if score:
+        if score and not expander_inlined:
             content.append(expander)
 
         with open(output_path, "w", encoding="utf-8") as f:
@@ -808,7 +814,12 @@ def main():
 
 
     if args.html:
-        if (not os.path.isfile(args.source)) and (not os.path.isdir(args.symbol)):
+        if (not os.path.isfile(args.source)):
+            print(f'<error>File {args.source} is not a file.')
+            all_exist = False
+
+        if (not os.path.isdir(args.symbol)):
+            print(f'<error>Directory {args.symbol} is not a directory.')
             all_exist = False
 
         if not all_exist:

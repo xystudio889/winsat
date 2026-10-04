@@ -43,14 +43,26 @@
 
             /* 下拉框 */
             --ex-header: #fdfdfd;
-            --ex-border: #eaeaea;
-            --ex-bg: #f7f7f7;
+            --ex-header-hover-border: #eaeaea;
+            --ex-header-hover-border-bottom: #d1d1d1;
+            --ex-header-hover-bg: #f9f9f9;
+
+            --ex-header-active-border: #eaeaea;
+            --ex-header-active-bg: #f9f9f9;
+
+            --ex-desc: #5f5f5f;
+
+            --ex-border: #eaeaeb;
+            --ex-bg: #fdfdfd;
             --ex-main: #fdfdfd;
             --ex-btn-hover: #f4f4f4;
             --ex-btn-active: #f7f7f7;
 
             /* 信息卡 */
             --content-card-bg: #fdfdfd;
+
+            /* 最低分 / 第 4 列背景（ControlFillColorSecondary） */
+            --fill-secondary: #e5e5e5;
 
             --scroll-background: #fafbfc;
             --scroll-foreground: #87898b;
@@ -84,15 +96,26 @@
             --dd-item-selected-active: #3a3a3a;
 
             /* 下拉框 */
-            --ex-header: #323232;
+            --ex-header: #343434;
+            --ex-header-hover-border: #3b3b3b;
+            --ex-header-hover-border-bottom: #373737;
+            --ex-header-hover-bg: #3a3a3a;
+
+            --ex-header-active-border: #363636;
+            --ex-header-active-bg: #2e2e2e;
+
+            --ex-desc: #d2d2d2;
+
             --ex-border: #232323;
-            --ex-bg: #2e2e2e;
+            --ex-bg: #323232;
             --ex-main: #393939;
-            --ex-btn-hover: #3e3e3e;
             --ex-btn-active: #3a3a3a;
 
             /* 信息卡 */
             --content-card-bg: #393939;
+
+            /* 最低分 / 第 4 列背景（ControlFillColorSecondary） */
+            --fill-secondary: #1d1d1d;
 
             --scroll-background: #2d2d2d;
             --scroll-foreground: #9ea0a3;
@@ -183,16 +206,22 @@
         .grid {
             display: grid;
             margin: 8px 0;
-            grid-template-columns: 140px 320px 130px 210px;
+            /*
+             * 列（从左往右）：
+             *  1) 128px          —— 组件（固定）
+             *  2) 剩余的全部空间 —— 评分的项目（不小于自身最长一行文字）
+             *  3) 真实大小       —— 子分数
+             *  4) 不小于 128px   —— 基本分数（内容 96 + 左右各 16）
+             */
+            grid-template-columns: 128px minmax(max-content, 1fr) auto minmax(128px, auto);
             /*
              * 行定义：
-             *  1) 3px  —— 标题上方的分隔线
-             *  2) 32px —— 标题行（夹在两条线之间，两条线间隔 32px）
-             *  3) 15px —— 标题下方的分隔线(3px) + 与表格内容之间的 12px 间隔
-             *  4~8) 30px —— 表格内容行
+             *  1) 3px    —— 标题上方的分隔线
+             *  2) auto   —— 标题行（上下间距由 .grid-head 的 margin 给出：8 / 24）
+             *  3) 3px    —— 标题下方的分隔线
+             *  4~8) auto —— 表格内容行（行与行之间 30px 由 .grid-cell 的 margin 给出）
              */
-            grid-template-rows: 3px 32px 4px repeat(5, 30px);
-            align-items: center;
+            grid-template-rows: 3px auto 3px repeat(5, auto);
         }
 
         .content {
@@ -200,17 +229,17 @@
             gap: 4px;
             flex-direction: column;
 
-            padding: 28px 0 0 36px;
+            padding: 28px 36px 0 36px;
             height: 100%;
         }
 
         .grid-line {
-            width: 810px;
+            /* 撑满父元件宽度 */
+            grid-column: 1 / -1;
             height: 3px;
             background-color: var(--grid-color);
-            grid-column: 1 / -1;
 
-            /* 线始终贴在所在行的顶部，下方多出的 12px 即为线与内容的间隔 */
+            /* 线始终贴在所在行的顶部 */
             align-self: start;
         }
 
@@ -218,16 +247,45 @@
             font-weight: bold;
         }
 
+        /* 表头：距上一条分隔线 8px、距下一条分隔线 8px */
+        .grid-head {
+            margin: 8px 0 8px 0;
+        }
+
+        /* 数据行：行与行之间 10px */
+        .grid-cell {
+            margin-top: 10px;
+        }
+
+        /* 子分数列：真实大小、内容居中 */
+        .sub-score {
+            text-align: center;
+        }
+
+        /* 并列最低分：左边两角圆角、右边无圆角，与第 4 列的背景连成一条 */
+        .sub-score.lowest {
+            background-color: var(--fill-secondary);
+            border-radius: 4px 0 0 4px;
+        }
+
+        /* 第 4 列：除标题行外整列一块无圆角背景（内容 96，左右各留 16） */
         .card-background {
             display: flex;
             flex-direction: column;
 
             align-items: center;
+            justify-content: center;
+            gap: 5px;
+
             grid-column: 4 / 5;
             grid-row: 4 / -1;
-            justify-self: center;
-            align-self: center;
+            align-self: stretch;
+
+            /* 与数据行内容对齐（数据行上间距 30px） */
+            margin-top: 0;
+
             text-align: center;
+            background-color: var(--fill-secondary);
         }
 
         .card {
@@ -238,14 +296,19 @@
             font-size: 20px;
             font-weight: bold;
 
-            margin: 5px;
             justify-content: center;
             align-items: center;
             text-align: center;
             box-sizing: border-box;
             background-color: var(--accent);
-            border-radius: 8px;
+            border-radius: 4px;
             color: var(--reverse-text);
+        }
+
+        /* 方块下方的提示文字：宽度与第 4 列内容一致（96），位于方块下 5px（靠 gap 而非 margin） */
+        .card-tip {
+            width: 96px;
+            margin: 0;
         }
 
         .fonticon {
@@ -587,12 +650,13 @@
         /* 下拉框 */
         .expander {
             background-color: var(--ex-bg);
-            width: 678px;
+            width: 100%;
 
             border: 1px solid var(--ex-border);
-            border-radius: 8px;
+            border-radius: 4px;
             /* 让标题的背景被圆角裁掉 */
             overflow: hidden;
+            margin: 8px 0 0 0;
         }
 
         /* 标题：整行都是「展开/收起」的点击区 */
@@ -606,14 +670,26 @@
             border-bottom: 1px solid var(--ex-border);
 
             gap: 16px;
-            padding: 0 8px 0 12px;
-            height: 46px;
+            padding: 0 18px;
+            height: 68px;
 
             cursor: pointer;
-
-            transition: background-color .1s ease;
         }
 
+        /* 悬浮状态 */
+        .expander-header:hover {
+            border-color: var(--ex-header-hover-border);
+            border-bottom-color: var(--ex-header-hover-border-bottom);
+
+            background-color: var(--ex-header-hover-bg);
+        }
+
+        .expander-header:active {
+            border-color: var(--ex-header-active-border);
+            background-color: var(--ex-header-active-bg);
+        }
+
+        .expander
         .expander-header:focus-visible {
             outline: 2px solid var(--accent);
             outline-offset: -2px;
@@ -649,14 +725,6 @@
             transform: rotate(180deg);
         }
 
-        .expander-header:hover>.expander-bg {
-            background-color: var(--ex-btn-hover);
-        }
-
-        .expander-header:active>.expander-bg {
-            background-color: var(--ex-btn-active);
-        }
-
         /* 内容：默认收起（高度 0）。
          * 裁剪盒自身不带内边距，高度在「0 ↔ 内容自然高度」之间用像素值过渡
          * （展开后的像素值由脚本写入，过渡结束后交还给 auto），固定 250ms。 */
@@ -672,6 +740,33 @@
         /* 内边距放在内层：收起时随内容一起被裁掉，不会残留 24px 的空档 */
         .expander-body {
             padding: 12px 8px;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .advanced-tip {
+            color: var(--ex-desc);
+            font-size: 12px;
+        }
+
+        .header-text p {
+            margin: 0;
+        }
+
+        .title-fonticon {
+            font-size: 20px;
         }
 
         .content-card {
@@ -896,7 +991,8 @@
                     </button>
 
                     <div class="dd-popup" role="listbox" aria-label="语言" data-i18n-aria="AppLanguage">
-                        <div class="dd-item selected" role="option" aria-selected="true" data-value="system">Use Browser Setting</div>
+                        <div class="dd-item selected" role="option" aria-selected="true" data-value="system">Use Browser
+                            Setting</div>
                         <div class="dd-item" role="option" aria-selected="false" data-value="zh-CN">简体中文</div>
                         <div class="dd-item" role="option" aria-selected="false" data-value="en-US">English</div>
                     </div>
@@ -906,6 +1002,58 @@
     </div>
     <div class="content">
         <p class="title" data-i18n="ResultTitle">Windows Experience Index results</p>
+        <!-- 分数表：列 ① 组件(128) ② 评分的项目(剩余) ③ 子分数(真实大小) ④ 基本分数(96 + 左右各 16) -->
+        <div class="grid">
+            <!-- 标题上方的分隔线 -->
+            <div class="grid-line"></div>
+
+            <div class="bold grid-head" data-i18n="Component">组件</div>
+            <div class="grid-head" data-i18n="ScoredItems">评分的项目</div>
+            <div class="grid-head" style="justify-self: center;" data-i18n="SubScore">子分数</div>
+            <div class="grid-head" style="justify-self: center;" data-i18n="BaseScore">基本分数</div>
+
+            <!-- 标题下方的分隔线 -->
+            <div class="grid-line"></div>
+
+            <div class="bold grid-cell" data-i18n="Processor">处理器:</div>
+            <div class="grid-cell" data-i18n="CalcPerSecond">每秒计算速度</div>
+            <div class="grid-cell sub-score lowest" id="CPUScore">1.0</div>
+            <div class="card-background">
+                <div class="card" id="TotalScore">1.0</div>
+                <p class="card-tip" data-i18n="subScoreTip">由最低子分数决定</p>
+            </div>
+            <div class="bold grid-cell" data-i18n="MemoryRAM">内存(RAM):</div>
+            <div class="grid-cell" data-i18n="MemoryOps">每秒内存运行速度</div>
+            <div class="grid-cell sub-score lowest" id="RAMScore">1.0</div>
+            <div class="bold grid-cell" data-i18n="Graphics">图形:</div>
+            <div class="grid-cell" data-i18n="DesktopGraphics">桌面图形性能</div>
+            <div class="grid-cell sub-score" id="DWMScore">2.0</div>
+            <div class="bold grid-cell" data-i18n="GamingGraphics">游戏图形:</div>
+            <div class="grid-cell" data-i18n="GamingGraphicsDesc">3D 商务和游戏图形性能</div>
+            <div class="grid-cell sub-score" id="3DScore">2.0</div>
+            <div class="bold grid-cell" data-i18n="PrimaryDisk">主硬盘:</div>
+            <div class="grid-cell" data-i18n="DiskTransferRate">硬盘数据传输速率</div>
+            <div class="grid-cell sub-score" id="DiskScore">3.0</div>
+        </div>
+        <div class="expander">
+            <div class="expander-header">
+                <div class="header-content">
+                    <p class="fonticon title-fonticon">&#xE710;</p>
+                    <div class="header-text">
+                        <p data-i18n="Advanced">高级信息</p>
+                        <p data-i18n="AdvancedTip" class="advanced-tip">查看详细信息，用于电脑性能的详细分析。</p>
+                    </div>
+                </div>
+                
+                <div class="expander-bg">
+                    <div class="fonticon expander-fonticon">&#xE70D;</div>
+                </div>
+            </div>
+            <div class="expander-content">
+                <div class="expander-body">
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -939,7 +1087,8 @@
                 'DarkTheme': '深色',
                 'AppLanguage': '语言',
                 "Appearance": '主题: ',
-                "Advanced": "高级信息"
+                "Advanced": "高级信息",
+                "AdvancedTip": "查看详细信息，用于电脑性能的详细分析。"
             },
             'en-US': {
                 'ExportTitle': 'Windows Experience Index export',
@@ -964,7 +1113,8 @@
                 'LightTheme': 'Light',
                 'DarkTheme': 'Dark',
                 "Appearance": 'Appearance: ',
-                "Advanced": "Advanced information"
+                "Advanced": "Advanced information",
+                "AdvancedTip": "View detailed information for a detailed analysis of computer performance."
             }
         };
 

@@ -10,6 +10,7 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -30,6 +31,9 @@ namespace winsat.pages
         public ObservableCollection<FileInfo> Files { get; } = new();
         private bool _isDialogShowing = false;
         private bool _isRunning = false;
+
+        /// <summary>分数方框当前是否使用强调色（否则使用禁用态画笔），主题变化时据此重新取色。</summary>
+        private bool _scoreBoxUsesAccent = true;
 
         private SolidColorBrush TextBrush;
         private SolidColorBrush SymbolBrush;
@@ -72,6 +76,16 @@ namespace winsat.pages
         {
             if (FileComboBox.SelectedItem is FileInfo selectedFile)
             {
+                // 双保险：最新一份跑分不允许删除（正常情况下按钮已经被禁用，
+                // 这里再挡一次，避免按钮状态和实际选中项不同步时删掉当前分数）
+                if (IsLatestDataStoreScore(selectedFile))
+                {
+                    RemoveButton.IsEnabled = false;
+                    LatestWarning.Visibility = Visibility.Visible;
+                    RemoveButton.Flyout.Hide();
+                    return;
+                }
+
                 deletedFiles = String.Empty;
 
                 if (FileHelper.IsInScoresDir(selectedFile.FullName))
@@ -87,14 +101,24 @@ namespace winsat.pages
                     }
                 }
 
-                await deleteFile(deletedFiles);
+                // 返回 false = 没删成（用户取消了 UAC 提权，或真的出错了）：此时不要刷新列表
+                bool deleted = await deleteFile(deletedFiles);
                 RemoveButton.Flyout.Hide();
-                RefreshFileButton_Click(null, null);
 
+                if (deleted)
+                {
+                    RefreshFileButton_Click(null, null);
+                }
             }
         }
 
-        public async Task deleteFile(string Files)
+        /// <summary>
+        /// 通过批处理删除文件。true = 已执行删除，false = 用户取消了 UAC 提权或发生错误。
+        /// 本方法绝不能向外抛异常：它由 async void 的 DeleteFile 调用，
+        /// 异常逃出去会走到 GlobalExceptionHandler，弹完错误框后直接退出程序
+        /// （在删除时按 UAC 的"否"就是这个后果）。
+        /// </summary>
+        public async Task<bool> deleteFile(string Files)
         {
             string batchFilePath = IoPath.Combine(FileHelper.installDir, "Commands", "File_delete.bat");
 
@@ -115,13 +139,34 @@ namespace winsat.pages
                     // 用 Task.Run 避免阻塞 UI 线程；WaitForExit 在 runas 场景下仍然有效
                     await Task.Run(() => process.WaitForExit());
                 }
+
+                return true;
             }
-            catch (Exception)
+            catch (Win32Exception ex) when (IsUserRefusedElevation(ex))
             {
-                ErrorDialog.Show(this.Content.XamlRoot, Loader.GetString("DeleteCanceled"));
-                throw; // 让调用者知道失败了，可以不刷新
+                // 用户在 UAC 提权对话框上点了"否"：这是一次正常的选择，不是错误。
+                // 静默返回：不弹错误框（UAC 本身已经把意思表达清楚了），也不刷新列表。
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // 其它失败：提示用户，但不 rethrow
+                ErrorDialog.Show(this.Content.XamlRoot, ex.Message);
+                return false;
             }
         }
+
+        // 删除文件时需要 UAC 提权，用户点"否"时 Win32Exception 的错误码在不同
+        // Windows/.NET 版本下不一样：ERROR_CANCELLED、ERROR_ACCESS_DENIED，
+        // 或者错误码取到 0 导致 HResult 落回异常默认的 E_FAIL(0x80004005)。
+        private const int ErrorCancelled = 1223; // ERROR_CANCELLED
+        private const int ErrorAccessDenied = 5; // ERROR_ACCESS_DENIED
+        private const int EFail = unchecked((int)0x80004005);
+
+        private static bool IsUserRefusedElevation(Win32Exception ex)
+            => ex.NativeErrorCode == ErrorCancelled
+            || ex.NativeErrorCode == ErrorAccessDenied
+            || ex.HResult == EFail;
 
         public static string FormatDateTime(List<string> stringList)
         {
@@ -260,7 +305,15 @@ namespace winsat.pages
 
         public void getFileList()
         {
-            fileList = FileHelper.GetFileTimeList(FileHelper.winSatFilePath).Select(x => IoPath.GetFileName(x)).ToList();
+            // 判定"最新"时只统计 DataStore 里"可分析的跑分"（含 Formal.Assessment 的那几份）。
+            // 不能直接用整个目录：一次 winsat 会同时写入 .etl 和各分量 XML，
+            // 它们的 LastWriteTime 往往和 Formal 那份落在同一毫秒附近，
+            // 排序后 Last() 很容易落到一个根本不在下拉框里的文件名上，
+            // latestFile 便对不上任何选项，"最新一份不可删除"的保护就失效了。
+            fileList = FileHelper.GetFileTimeList(FileHelper.winSatFilePath)
+                .Where(FileHelper.IsAnalyzableFile)
+                .Select(IoPath.GetFileName)
+                .ToList();
 
             if (fileList.Count != 0)
             {
@@ -271,6 +324,15 @@ namespace winsat.pages
                 lastIndex = -2;
             }
         }
+
+        /// <summary>
+        /// 是否为 DataStore 里最新的那份跑分：最新一份不允许删除
+        /// （界面上的当前分数就来自它，删掉它还会连带删除该次跑分的其它文件）。
+        /// Scores 目录下导入的跑分不算最新，永远可删。
+        /// </summary>
+        private bool IsLatestDataStoreScore(FileInfo file)
+            => !FileHelper.IsInScoresDir(file.FullName)
+            && string.Equals(file.Name, latestFile, StringComparison.OrdinalIgnoreCase);
 
         private async Task LoadFilesAsync()
         {
@@ -283,7 +345,9 @@ namespace winsat.pages
                         Title = Loader.GetString("DirectoryNotFoundTitle"),
                         Content = string.Format(Loader.GetString("DirectoryNotFoundContent"), FileHelper.winSatFilePath),
                         CloseButtonText = Loader.GetString("OK"),
-                        XamlRoot = this.Content.XamlRoot
+                        XamlRoot = this.Content.XamlRoot,
+                        // 对话框不继承窗口内容主题，需显式跟随软件主题
+                        RequestedTheme = AppTheme.CurrentElementTheme
                     }.ShowAsync();
                     return;
                 }
@@ -334,7 +398,9 @@ namespace winsat.pages
                     Title = Loader.GetString("PermissionDeniedTitle"),
                     Content = Loader.GetString("PermissionDeniedContent"),
                     CloseButtonText = Loader.GetString("OK"),
-                    XamlRoot = this.Content.XamlRoot
+                    XamlRoot = this.Content.XamlRoot,
+                    // 对话框不继承窗口内容主题，需显式跟随软件主题
+                    RequestedTheme = AppTheme.CurrentElementTheme
                 }.ShowAsync();
             }
             catch (ArgumentException)
@@ -350,8 +416,7 @@ namespace winsat.pages
             if (FileComboBox.SelectedItem is FileInfo selectedFile)
             {
                 // "最新文件不可删除"只针对 DataStore 里最新的那份；Scores 下导入的跑分永远可删
-                bool isProtectedLatest = !FileHelper.IsInScoresDir(selectedFile.FullName)
-                    && IoPath.GetFileName(selectedFile.FullName) == latestFile;
+                bool isProtectedLatest = IsLatestDataStoreScore(selectedFile);
 
                 RemoveButton.IsEnabled = !isProtectedLatest;
                 LatestWarning.Visibility = isProtectedLatest ? Visibility.Visible : Visibility.Collapsed;
@@ -430,13 +495,17 @@ namespace winsat.pages
                                     FontSize = 16,
                                     FontWeight = FontWeights.Bold
                                 }; // 字符
-                                var Blueline = new Line() {
-                                    X1 = 160,
-                                    X2 = 1900,
-                                    Y1 = 12,
-                                    Y2 = 12,
-                                    StrokeThickness = 4,
-                                    Stroke = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"]
+                                // 线：必须"继续扩张"，不能用 Line + X2=1900 这种固定坐标——
+                                // Line 的期望宽度是它几何图形的完整宽度（约 1740），
+                                // 而横向 Auto 的 ScrollViewer 会把这个宽度报成"滚动容器的横向大小"，
+                                // 于是整张卡片的 Content 被撑到 1000+，右侧内容全被裁掉。
+                                // Rectangle 用 Stretch，期望宽度为 0，高度和位置与原来的 4px 线一致。
+                                var Blueline = new Rectangle() {
+                                    Height = 4,
+                                    Margin = new Thickness(160, 10, 0, 0),
+                                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                                    VerticalAlignment = VerticalAlignment.Top,
+                                    Fill = (Microsoft.UI.Xaml.Media.SolidColorBrush)AccentBrushProbe.Background
                                 }; // 线
 
                                 panel.Children.Add(text);
@@ -545,10 +614,9 @@ namespace winsat.pages
 
                 // 设置显示
                 LatestTip.Visibility = Visibility.Collapsed;
-                RectangleCanvas.Visibility = Visibility.Visible;
-                MinScoreText.Visibility = Visibility.Visible;
+                TotalScorePanel.Visibility = Visibility.Visible;
                 LatestUpdateTime.Visibility = Visibility.Collapsed;
-                RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"];
+                SetScoreBoxAccent(true);
                 // score_list[6] = "2";
 
                 switch (score_list[6])
@@ -564,16 +632,15 @@ namespace winsat.pages
                         WinSatTip.Message = Loader.GetString("HardwareChangedText");
                         WinsatTipButton.Content = Loader.GetString("Refresh");
                         WinSatTip.IsOpen = true;
-                        RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorDisabledBrush"];
+                        SetScoreBoxAccent(false);
                         break;
                     case "3":
                         WinSatTip.Title = "";
                         WinSatTip.Message = Loader.GetString("NotGetTip");
                         WinsatTipButton.Content = Loader.GetString("GetScore");
                         WinSatTip.IsOpen = true;
-                        RectangleBackground.Background = (Microsoft.UI.Xaml.Media.SolidColorBrush)Application.Current.Resources["AccentTextFillColorDisabledBrush"];
-                        RectangleCanvas.Visibility = Visibility.Collapsed;
-                        MinScoreText.Visibility = Visibility.Collapsed;
+                        SetScoreBoxAccent(false);
+                        TotalScorePanel.Visibility = Visibility.Collapsed;
                         break;
                     default: break;
                 }
@@ -584,10 +651,52 @@ namespace winsat.pages
                 GraphicsScore.Text = score_list[3];
                 MemoryScore.Text = score_list[4];
                 WinSPRLevel.Text = score_list[7];
+
+                HighlightLowestScores();
             }
             finally
             {
                 _isDialogShowing = false;
+            }
+        }
+
+        /// <summary>
+        /// 给子分数最低的那一行（并列则都算）加上背景：左边两角圆角、右边无圆角，
+        /// 与第 4 列（基本分数）那整块无圆角背景连成一条。
+        /// 取不到数值（未跑分 / 未评分文案）或最低分为 0 时，全部不显示。
+        /// </summary>
+        private void HighlightLowestScores()
+        {
+            var cells = new (Border Background, TextBlock Text)[]
+            {
+                (CPUScoreBackground, CPUScore),
+                (MemoryScoreBackground, MemoryScore),
+                (GraphicsScoreBackground, GraphicsScore),
+                (D3DScoreBackground, D3DScore),
+                (DiskScoreBackground, DiskScore),
+            };
+
+            var values = new double?[cells.Length];
+            for (int i = 0; i < cells.Length; i++)
+            {
+                values[i] = double.TryParse(cells[i].Text.Text, NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out double value) ? value : null;
+            }
+
+            // 有取不到的值，或最低分为 0（未跑分）：不显示任何背景
+            if (values.Any(v => v is null) || values.Min(v => v!.Value) <= 0)
+            {
+                foreach (var cell in cells)
+                    cell.Background.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            double lowest = values.Min(v => v!.Value);
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Background.Visibility = values[i] == lowest
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
             }
         }
 
@@ -640,6 +749,7 @@ namespace winsat.pages
         private void OnActualThemeChanged(FrameworkElement sender, object args)
         {
             UpdateTheme();
+            RefreshScoreBoxBrush();
             HighlightXml(xmlContent);
         }
 
@@ -680,6 +790,24 @@ namespace winsat.pages
         {
             // 使用元素实际生效的主题，这样用户强制浅色/深色时高亮配色也能保持一致
             return ActualTheme == ElementTheme.Dark;
+        }
+
+        /// <summary>
+        /// 设置分数方框的颜色状态：强调色或禁用态。
+        /// 画笔从页面内的主题探针读取，保证反色模式下跟随软件主题而非系统主题。
+        /// </summary>
+        private void SetScoreBoxAccent(bool useAccent)
+        {
+            _scoreBoxUsesAccent = useAccent;
+            RefreshScoreBoxBrush();
+        }
+
+        /// <summary>按当前主题重新取色并应用到分数方框（主题切换时调用）。</summary>
+        private void RefreshScoreBoxBrush()
+        {
+            RectangleBackground.Background = (SolidColorBrush)(_scoreBoxUsesAccent
+                ? AccentBrushProbe.Background
+                : AccentDisabledBrushProbe.Background);
         }
 
         // ---- XML 格式化（新增） ----

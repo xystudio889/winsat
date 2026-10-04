@@ -1,5 +1,5 @@
 {
-  "$requires": 8.1,
+  "$requires": 8.2,
   "$locale": {
     "none": "None",
     "warning_file_missing": "file '{0}' does not exist, skipped",

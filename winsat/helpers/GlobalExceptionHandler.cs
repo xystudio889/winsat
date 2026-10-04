@@ -90,6 +90,8 @@ namespace winsat.helpers
                 var dialog = new ContentDialog
                 {
                     XamlRoot = window.Content?.XamlRoot,
+                    // 对话框不继承窗口内容主题，需显式跟随软件主题
+                    RequestedTheme = AppTheme.CurrentElementTheme,
                     Title = DialogTitle,
                     Content = new ScrollViewer
                     {

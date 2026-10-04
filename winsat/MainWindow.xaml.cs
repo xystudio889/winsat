@@ -3,8 +3,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
-using winsat.helpers;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.ApplicationSettings;
+using winsat.helpers;
 using winsat.pages;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -14,59 +15,181 @@ namespace winsat
 {
     public sealed partial class MainWindow : Window
     {
+        // ---- ³ß´ç¶Ïµã£¨µ¥Î» DIP£¬¼´ 100% / 96 DPI ÏÂµÄÏñËØ£»ÆäËü DPI ÓÉÏµÍ³°´±ÈÀı»»Ëã£©----
+
+        /// <summary>´°¿Ú×îĞ¡¿í¶È£ºÔÙĞ¡¾ÍÍÏ²»¶¯ÁË¡£</summary>
+        private const double MinWindowWidth = 765;
+
+        /// <summary>´°¿Ú×îĞ¡¸ß¶È£ºÔÙĞ¡¾ÍÍÏ²»¶¯ÁË¡£</summary>
+        private const double MinWindowHeight = 400;
+
+        /// <summary>µÍÓÚ´Ë¿í¶È£º²à±ßÀ¸ÍêÈ«Òş²Ø£¨µã±êÌâÀ¸°´Å¥²ÅÒÔ¸²¸Ç²ã´ò¿ª£©¡£</summary>
+        private const double CompactPaneWidth = 800;
+
+        /// <summary>µÍÓÚ´Ë¿í¶È£º²à±ßÀ¸Ö»ÏÔÊ¾Í¼±ê£»´ïµ½´Ë¿í¶È£º²à±ßÀ¸³£×¤¡¢Õ¹¿ªÊ±²»¸²¸ÇÄÚÈİ¡£</summary>
+        private const double ExpandedPaneWidth = 1100;
+
+        /// <summary>µ±Ç°µ¼º½À¸Î»ÖÃ£¨<see cref="AppSettings.LeftNavigation"/> / <see cref="AppSettings.TopNavigation"/>£©¡£</summary>
+        private string _navigationLocation = AppSettings.LeftNavigation;
+
+        /// <summary>
+        /// ¿íÆÁ£¨¡İ <see cref="ExpandedPaneWidth"/>£©ÏÂ²à±ßÀ¸ÊÇ·ñÕ¹¿ª¡£
+        /// Ê×´Î²¼¾ÖÊ±°´µ±Ç°¿í¶ÈÈ¡Öµ£¨¿íÆÁÄ¬ÈÏÕ¹¿ª£¬Óë NavigationView µÄÄ¬ÈÏÒ»ÖÂ£©£¬
+        /// Ö®ºóÖ»ÓÉÓÃ»§<b>ÔÚ¿íÆÁÏÂ</b>ÊÖ¶¯¿ª¹Ø¸Ä±ä£»Ëõ»ØÕ­ÆÁÔÙ·Å´ó»Ø¿íÆÁÊ±°´Ëü»Ö¸´¡£
+        /// Í¼±ê / ¼«¼òÄ£Ê½Àï¿ª¹ØµÄÖ»ÊÇÁÙÊ±¸²¸Ç²ã£¬²»Ó°ÏìËü¡£
+        /// </summary>
+        private bool _paneOpenInWideMode;
+
+        /// <summary>ÊÇ·ñÒÑ¾­°´Ê×´Î²¼¾ÖµÄ¿í¶ÈÈ·¶¨¹ı¿íÆÁÕ¹¿ªÆ«ºÃ¡£</summary>
+        private bool _panePreferenceInitialized;
+
+        /// <summary>ÊÇ·ñÒÑ¼àÌı XamlRoot.Changed£¨±ÜÃâ Loaded ¶à´Î´¥·¢Ê±ÖØ¸´¶©ÔÄ£©¡£</summary>
+        private bool _xamlRootHooked;
+
         public MainWindow()
         {
             this.InitializeComponent();
             SetWindowProperties();
 
-            // æ¢å¤ä¸Šæ¬¡ä¿å­˜çš„å¤–è§‚è®¾ç½®
+            // »Ö¸´ÉÏ´Î±£´æµÄÍâ¹ÛÉèÖÃ
             ApplyTheme(AppSettings.Theme);
             ApplyBackground(AppSettings.Background);
             SetNavigationLocation(AppSettings.NavigationLocation);
         }
 
         /// <summary>
-        /// åº”ç”¨è½¯ä»¶ä¸»é¢˜ã€‚ä¼ å…¥ "Light"ã€"Dark" æˆ– "Default"ï¼ˆè·Ÿéšç³»ç»Ÿï¼‰ã€‚
+        /// Ó¦ÓÃÈí¼şÖ÷Ìâ¡£´«Èë "Light"¡¢"Dark" »ò "Default"£¨¸úËæÏµÍ³£©¡£
         /// </summary>
         public void ApplyTheme(string theme)
         {
-            ElementTheme elementTheme = theme switch
-            {
-                AppSettings.LightTheme => ElementTheme.Light,
-                AppSettings.DarkTheme => ElementTheme.Dark,
-                _ => ElementTheme.Default,
-            };
+            ElementTheme elementTheme = AppTheme.ToElementTheme(theme);
 
             if (Content is FrameworkElement root)
             {
                 root.RequestedTheme = elementTheme;
             }
+
+            // ±êÌâÀ¸°´Å¥ÓÉÏµÍ³»æÖÆ£¬²»¼Ì³Ğ´°¿ÚÄÚÈİµÄ RequestedTheme£º
+            // ±ØĞëÏÔÊ½Ö¸¶¨±êÌâÀ¸Ö÷Ìâ£¬·ñÔò·´É«Ä£Ê½ÏÂ°´Å¥ÅäÉ«»á¸úËæÏµÍ³¡£
+            try
+            {
+                AppWindow.TitleBar.PreferredTheme = AppTheme.ToTitleBarTheme(theme);
+            }
+            catch (Exception)
+            {
+                // ÏµÍ³²»Ö§³Ö PreferredTheme Ê±ºöÂÔ£¬±êÌâÀ¸°´Å¥±£³ÖÏµÍ³Ä¬ÈÏÅäÉ«¡£
+            }
         }
 
         /// <summary>
-        /// åº”ç”¨èƒŒæ™¯æè´¨ã€‚ä¼ å…¥ "Mica"ã€"MicaAlt"ã€"Arcylic"ã€"ArcylicThin" æˆ– "None"ï¼ˆä¸ä½¿ç”¨é€æ˜æ•ˆæœï¼‰ã€‚
-        /// ç³»ç»Ÿä¸æ”¯æŒæ—¶ç”± <see cref="AppBackground.Create"/> è‡ªåŠ¨å›é€€ã€‚
+        /// Ó¦ÓÃ±³¾°²ÄÖÊ¡£´«Èë "Mica"¡¢"MicaAlt"¡¢"Arcylic"¡¢"ArcylicThin" »ò "None"£¨²»Ê¹ÓÃÍ¸Ã÷Ğ§¹û£©¡£
+        /// ÏµÍ³²»Ö§³ÖÊ±ÓÉ <see cref="AppBackground.Create"/> ×Ô¶¯»ØÍË¡£
         /// </summary>
         public void ApplyBackground(string background)
         {
             SystemBackdrop? backdrop = AppBackground.Create(background);
 
-            // ä¸ä½¿ç”¨é€æ˜æ•ˆæœæ—¶ï¼Œç”¨ä¸é€æ˜çš„ä¸»é¢˜è‰²é“ºæ»¡çª—å£ï¼Œé¿å…éœ²å‡ºé€æ˜/é»‘è‰²åº•ã€‚
+            // ²»Ê¹ÓÃÍ¸Ã÷Ğ§¹ûÊ±£¬ÓÃ²»Í¸Ã÷µÄÖ÷ÌâÉ«ÆÌÂú´°¿Ú£¬±ÜÃâÂ¶³öÍ¸Ã÷/ºÚÉ«µ×¡£
             OpaqueBackground.Visibility = backdrop is null ? Visibility.Visible : Visibility.Collapsed;
 
             SystemBackdrop = backdrop;
         }
 
         /// <summary>
-        /// åº”ç”¨å¯¼èˆªæ ä½ç½®ã€‚ä¼ å…¥ "Left"ï¼ˆå·¦ä¾§ï¼‰æˆ– "Top"ï¼ˆä¸Šæ–¹ï¼‰ã€‚
+        /// Ó¦ÓÃµ¼º½À¸Î»ÖÃ¡£´«Èë "Left"£¨×ó²à£©»ò "Top"£¨ÉÏ·½£©¡£
+        /// ×ó²àµ¼º½Ê±£¬²à±ßÀ¸µÄ¾ßÌåĞÎÌ¬ÓÉ´°¿Ú¿í¶È¾ö¶¨£¨¼û <see cref="ApplyAdaptivePaneLayout"/>£©¡£
         /// </summary>
         public void SetNavigationLocation(string location)
         {
+            _navigationLocation = location;
             titleBar.IsPaneToggleButtonVisible = (location == AppSettings.LeftNavigation);
-            NavigationViewControl.PaneDisplayMode =
-                location == AppSettings.TopNavigation
-                    ? NavigationViewPaneDisplayMode.Top
-                    : NavigationViewPaneDisplayMode.Left;
+
+            if (location == AppSettings.TopNavigation)
+            {
+                NavigationViewControl.PaneDisplayMode = NavigationViewPaneDisplayMode.Top;
+                return;
+            }
+
+            // ×ó²àµ¼º½£º°´µ±Ç°¿í¶ÈÖØĞÂ¾ö¶¨ĞÎÌ¬£¨´°¿ÚÉĞÎ´²¼¾ÖÊ±½»ÓÉ RootGrid_SizeChanged ´¦Àí£©
+            ApplyAdaptivePaneLayout(RootGrid.ActualWidth);
+        }
+
+        private void RootGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            ApplyWindowMinSize();
+
+            // ´°¿Ú±»ÍÏµ½²»Í¬Ëõ·Å±ÈÀıµÄÏÔÊ¾Æ÷Ê±£¬×îĞ¡³ß´çÒª°´ĞÂµÄ±ÈÀıÖØËã
+            if (!_xamlRootHooked && RootGrid.XamlRoot is { } xamlRoot)
+            {
+                _xamlRootHooked = true;
+                xamlRoot.Changed += (_, _) => ApplyWindowMinSize();
+            }
+        }
+
+        /// <summary>
+        /// ÏŞÖÆ´°¿Ú×îĞ¡³ß´ç£¨750 ¡Á 400£¬µ¥Î» DIP£¬¼´ 100% / 96 DPI ÏÂµÄÏñËØ£©¡£
+        /// OverlappedPresenter µÄ×îĞ¡³ß´ç°´ÎïÀíÏñËØ¼ÆËã£¬ÕâÀïÓÃËõ·Å±ÈÀı»»Ëã£¬
+        /// ±£Ö¤ÔÚ¸ß DPI ÏÂ´°¿ÚÂß¼­³ß´çÒ²²»»áĞ¡ÓÚ 750 ¡Á 400¡£
+        /// </summary>
+        private void ApplyWindowMinSize()
+        {
+            if (RootGrid.XamlRoot is null)
+                return;
+
+            if (AppWindow.Presenter is not OverlappedPresenter presenter)
+                return;
+
+            double scale = RootGrid.XamlRoot.RasterizationScale;
+            presenter.PreferredMinimumWidth = (int)Math.Ceiling(MinWindowWidth * scale);
+            presenter.PreferredMinimumHeight = (int)Math.Ceiling(MinWindowHeight * scale);
+        }
+
+        private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ApplyAdaptivePaneLayout(e.NewSize.Width);
+        }
+
+        /// <summary>
+        /// ×ó²àµ¼º½Ê±°´´°¿Ú¿í¶ÈÇĞ»»²à±ßÀ¸ĞÎÌ¬£¨ãĞÖµµ¥Î» DIP£©£º
+        ///   &lt; 800 £ºÍêÈ«Òş²Ø£¬Ö»ÓĞµã±êÌâÀ¸µÄÕ¹¿ª°´Å¥²ÅÒÔ<b>¸²¸Ç²ã</b>´ò¿ª£»
+        ///   &lt; 1100£ºÖ»ÏÔÊ¾Í¼±ê£¬Õ¹¿ªÍ¬ÑùÊÇ<b>¸²¸Ç²ã</b>£»
+        ///   ¡İ 1100£ºÕ¹¿ªÊ±Õ¼ÓÃ¿í¶È¡¢<b>²»</b>¸²¸ÇÄÚÈİ£¨ÄÚÁª£©£»ÊÕÆğÊ±±£ÁôÍ¼±êÌõ£¨Óë 800~1100 Á¬Ğø£©¡£
+        ///
+        /// ¿íÆÁÏÂÕ¹¿ª»¹ÊÇÊÕÆğ£¬°´ÓÃ»§ÔÚ¿íÆÁÏÂµÄÊÖ¶¯¿ª¹Ø¼ÇÒä£¨Ê×´Î²¼¾ÖÊ±°´µ±Ç°¿í¶ÈÈ¡¡°Õ¹¿ª¡±£©£¬
+        /// Ëõ»ØÕ­ÆÁÔÙ·Å´ó»Ø¿íÆÁÊ±»Ö¸´¡£
+        /// ¿íÆÁ¡¸ÊÕÆğ¡¹Ö®ËùÒÔÓÃ LeftCompact ¶ø²»ÊÇ Left + ¹Ø±Õ£ºNavigationView Ö»ÒªÇĞµ½ Left£¨Expanded£©
+        /// ¾Í»á×Ô¶¯ OpenPane()£¬ÇĞ¹ıÈ¥ÔÙ¹Ø»áÉÁÒ»ÏÂ¡°´ÓÕ¹¿ªËõ»Ø¡±µÄ¶¯»­¡£
+        /// ¶¥²¿µ¼º½²»×ö×ÔÊÊÓ¦£¨¶¥²¿²»»áÕ­µ½ÏÔÊ¾²»³öÀ´£©¡£
+        /// </summary>
+        private void ApplyAdaptivePaneLayout(double width)
+        {
+            if (_navigationLocation != AppSettings.LeftNavigation)
+                return;   // ¶¥²¿µ¼º½²»²ÎÓë
+
+            if (width <= 0)
+                return;   // »¹Ã»²¼¾Ö£ºµÈ RootGrid_SizeChanged
+
+            if (!_panePreferenceInitialized)
+            {
+                // Ê×´Î²¼¾Ö£º°´µ±Ç°¿í¶È¶¨ÏÂ³õÊ¼Æ«ºÃ£¨¿íÆÁÕ¹¿ª¡¢·ñÔòÊÕÆğ£©£¬
+                // Óë NavigationView ÔÚÍ¬Ñù¿í¶ÈÏÂµÄÄ¬ÈÏ×´Ì¬Ò»ÖÂ£¬±ÜÃâ¸ÕÆô¶¯¾Í°Ñ²à±ßÀ¸ÊÕµô
+                _paneOpenInWideMode = width >= ExpandedPaneWidth;
+                _panePreferenceInitialized = true;
+            }
+
+            NavigationViewPaneDisplayMode target =
+                width < CompactPaneWidth ? NavigationViewPaneDisplayMode.LeftMinimal :
+                width >= ExpandedPaneWidth && _paneOpenInWideMode ? NavigationViewPaneDisplayMode.Left :
+                NavigationViewPaneDisplayMode.LeftCompact;
+
+            if (target == NavigationViewControl.PaneDisplayMode)
+                return;
+
+            NavigationViewControl.PaneDisplayMode = target;
+
+            // Í¼±ê / ¼«¼òÄ£Ê½ÏÂµÄÕ¹¿ªÖ»ÊÇÁÙÊ±¸²¸Ç²ã£¬»»µ²Ê±Ò»ÂÉÊÕÆğ£»
+            // ¿íÆÁÔò»Ö¸´ÓÃ»§ÉÏ´ÎÔÚ¿íÆÁÏÂµÄÑ¡Ôñ¡£
+            NavigationViewControl.IsPaneOpen = target == NavigationViewPaneDisplayMode.Left;
         }
 
         private void SetWindowProperties()
@@ -111,6 +234,16 @@ namespace winsat
 
         private void TitleBar_PaneToggleRequested(TitleBar sender, object args)
         {
+            if (RootGrid.ActualWidth >= ExpandedPaneWidth)
+            {
+                // ¿íÆÁ£ºÕ¹¿ª = ÄÚÁª£¨Õ¼ÓÃ¿í¶È¡¢²»¸²¸ÇÄÚÈİ£©£»ÊÕÆğ = »Øµ½Í¼±êÌõ¡£
+                // Õâ´ÎÑ¡Ôñ»á±»¼Ç×¡£¬Ëõ»ØÕ­ÆÁÔÙ·Å´ó»Ø¿íÆÁÊ±»Ö¸´¡£
+                _paneOpenInWideMode = NavigationViewControl.PaneDisplayMode != NavigationViewPaneDisplayMode.Left;
+                ApplyAdaptivePaneLayout(RootGrid.ActualWidth);
+                return;
+            }
+
+            // Í¼±ê / ¼«¼òÄ£Ê½£º´ò¿ª/¹Ø±ÕµÄÖ»ÊÇÁÙÊ±¸²¸Ç²ã£¬²»Ó°Ïì¿íÆÁÏÂµÄÄ¬ÈÏ×´Ì¬
             NavigationViewControl.IsPaneOpen = !NavigationViewControl.IsPaneOpen;
         }
     }

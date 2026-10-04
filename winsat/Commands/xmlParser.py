@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 
 init(autoreset=True)  # 重置颜色设置，避免在终端中出现颜色冲突
 
-__version__ = 8.1
+__version__ = 8.2
 cdata_regex = re.compile(r'<!\[CDATA\[\s+(.+?)\s+\]\]>', re.DOTALL)
 
 # 特殊值：不是 xpath，而是直接产生结构化标记（键名只用于区分，spacing 不需要键名）
@@ -504,7 +504,12 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
     content = base_html.find('div', class_='content') # 建立content
 
     if score:
-        grid = createTemplate('grid')
+        # 分数表：模板里若已内联一份（方便直接用浏览器预览），就复用它；
+        # 否则用 grid.html 追加一份。两个模板的内容保持一致。
+        grid = base_html.find('div', class_='grid')
+        if grid is None:
+            grid = createTemplate('grid')
+            content.append(grid) # 表格
 
         cpu_score = grid.find('div', id='CPUScore') # 表格
         ram_score = grid.find('div', id='RAMScore')
@@ -517,6 +522,21 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
             args.cpu_score, args.ram_score, args.graphics_score, args.d3_score, args.disk_score
         )
 
+        # 并列最低分的行都加 "lowest" 类：左边两角圆角、右边无圆角，
+        # 与第 4 列（基本分数）的无圆角背景连成一条。
+        # （模板里预置的 lowest 只是预览用的示例，先清掉再按真实分数重新标）
+        for cell, value in (
+            (cpu_score, args.cpu_score),
+            (ram_score, args.ram_score),
+            (dwm_score, args.graphics_score),
+            (d3_score, args.d3_score),
+            (disk_score, args.disk_score),
+        ):
+            classes = [c for c in (cell.get('class') or []) if c != 'lowest']
+            if value == arg_total_score:
+                classes.append('lowest')
+            cell['class'] = classes
+
         cpu_score.string = str(args.cpu_score)
         ram_score.string = str(args.ram_score)
         dwm_score.string = str(args.graphics_score)
@@ -524,11 +544,20 @@ def export_html(source: str, symbol: str, available: dict[str, str], output_path
         disk_score.string = str(args.disk_score)
         total_score.string = str(arg_total_score)
 
-        content.append(grid) # 表格
+        # 高级信息（expander）：同样优先复用模板里已内联的那一份
+        expander = base_html.find('div', class_='expander')
+        if expander is None:
+            expander = createTemplate('expander')
+            content.append(expander)
 
-        expander = createTemplate('expander')
         add_content = expander.find('div', class_="expander-body") # 设置添加组件
     else:
+        # 不导出分数表：把模板里内联的分数表 / 高级信息去掉
+        for klass in ('grid', 'expander'):
+            node = base_html.find('div', class_=klass)
+            if node is not None:
+                node.decompose()
+
         # 设置添加的组件
         add_content = content
 

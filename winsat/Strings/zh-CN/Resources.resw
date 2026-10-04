@@ -120,9 +120,6 @@
   <data name="About.Text" xml:space="preserve">
     <value>关于</value>
   </data>
-  <data name="AdvancedInfo.Text" xml:space="preserve">
-    <value>高级信息</value>
-  </data>
   <data name="AppTheme.Description" xml:space="preserve">
     <value>设置软件的主题展示。</value>
   </data>
@@ -517,5 +514,11 @@
   </data>
   <data name="AppDescription" xml:space="preserve">
     <value>使用WinUI 3 制作的 Windows 跑分工具</value>
+  </data>
+  <data name="Advanced.Description" xml:space="preserve">
+    <value>查看详细信息，用于电脑性能的详细分析。</value>
+  </data>
+  <data name="Advanced.Header" xml:space="preserve">
+    <value>高级信息</value>
   </data>
 </root>

@@ -14,11 +14,15 @@
     </Window.SystemBackdrop>
     <Grid
         x:Name="RootGrid"
+        Loaded="RootGrid_Loaded"
+        SizeChanged="RootGrid_SizeChanged"
     >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <Border x:Name="AccentBrushProbe" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
+        <Border x:Name="AccentDisabledBrushProbe" Background="{ThemeResource AccentFillColorDisabledBrush}" Visibility="Collapsed" />
         <!--  背景材质为“无”时用于遮住窗口透明区域的不透明背景  -->
         <Border
             x:Name="OpaqueBackground"
@@ -37,9 +41,16 @@
             </TitleBar.IconSource>
         </TitleBar>
 
+        <!--
+            侧边栏的自适应由代码按窗口宽度显式切换 PaneDisplayMode（见 MainWindow.xaml.cs）。
+            这里的两个阈值只是在启动时让 NavigationView 自己的 Auto 状态与之一致，
+            避免第一帧先按默认阈值（641 / 1008）显示再被代码纠正而闪一下。
+        -->
         <NavigationView
             x:Name="NavigationViewControl"
             Grid.Row="1"
+            CompactModeThresholdWidth="800"
+            ExpandedModeThresholdWidth="1100"
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="False"
             IsTabStop="False"
@@ -48,7 +59,7 @@
                 VerticalScrollBarVisibility="Visible"
                 HorizontalScrollBarVisibility="Disabled"
                 HorizontalScrollMode="Disabled">
-                    <Frame
+                <Frame
                     x:Name="rootFrame"
                 />
             </ScrollViewer>

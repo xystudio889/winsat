@@ -6,32 +6,40 @@
     xmlns:local="using:winsat.pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
 
     <Grid>
+        <!--
+            主题探针：用 {ThemeResource} 解析出的画笔画，始终对应当前元素主题（软件主题），
+            供代码读取。直接读 Application.Current.Resources 得到的是系统主题下的画笔，
+            反色模式（系统主题与软件主题不一致）下会取错颜色。
+        -->
         <Grid.RowDefinitions >
             <!--Title Bar -->
             <RowDefinition Height = "Auto" />
             <!-- App Content -->
             <RowDefinition Height = "*" />
         </Grid.RowDefinitions >
+        <Border x:Name="AccentBrushProbe" Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
+        <Border x:Name="AccentDisabledBrushProbe" Background="{ThemeResource AccentFillColorDisabledBrush}" Visibility="Collapsed" />
         <!-- 主内容 -->
-        <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin="36 0 0 0" >
+        <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin="36 0 36 0" Spacing="4" >
             <TextBlock
-                Margin="0,40,36,36"
+                Margin="0,40,36,32"
                 Style="{StaticResource TitleTextBlockStyle}"
                 x:Uid="HomeTitle" />
             <TextBlock 
                 Grid.Row = "1" 
                 x:Uid="HomeDesc"
-                Margin = "0 0 0 24"  
+                Margin = "0 0 0 20"  
             />
             <InfoBar
                 x:Name="WinSatTip"
                 IsIconVisible="True"
                 Severity="Warning"
                 IsClosable="False"
-                Margin="0 0 36 12"
+                Margin="0 0 36 8"
             >
                 <InfoBar.ActionButton>
                     <Button 
@@ -41,158 +49,248 @@
                     />
                 </InfoBar.ActionButton>
             </InfoBar>
-            <!-- 主窗口 -->
+            <!--
+                主窗口（分数表）
+                列：① 组件（固定 128）｜② 评分的项目（占满剩余）｜③ 子分数（真实大小）｜④ 基本分数（内容 96 + 左右各 16）
+                行：0 顶部分隔线｜1 表头｜2 底部分隔线｜3~7 五行数据
+                竖向间距：表头 8、底部分隔线 24、数据行与行之间 30
+            -->
             <Grid>
-                <!-- 分数方框 -->
-                <Canvas x:Name="RectangleCanvas">
-                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="550" Canvas.Top="50" >
+                <Grid.ColumnDefinitions>
+                    <!-- ① 组件：固定 128px -->
+                    <ColumnDefinition Width="128" />
+                    <!-- ② 评分的项目：除去其它列之后剩下的全部空间 -->
+                    <ColumnDefinition Width="*" />
+                    <!-- ③ 子分数：真实大小 -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- ④ 基本分数：内容 96 + 左右各 16 -->
+                    <ColumnDefinition Width="Auto" MinWidth="128" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />  <!-- 0 顶部分隔线 -->
+                    <RowDefinition Height="Auto" />  <!-- 1 表头 -->
+                    <RowDefinition Height="Auto" />  <!-- 2 底部分隔线 -->
+                    <RowDefinition Height="Auto" />  <!-- 3 处理器 -->
+                    <RowDefinition Height="Auto" />  <!-- 4 内存 -->
+                    <RowDefinition Height="Auto" />  <!-- 5 图形 -->
+                    <RowDefinition Height="Auto" />  <!-- 6 游戏图形 -->
+                    <RowDefinition Height="Auto" />  <!-- 7 主硬盘 -->
+                </Grid.RowDefinitions>
+
+                <!-- 分隔线：撑满父元件宽度 -->
+                <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Height="3"
+                        Background="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+                <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" Height="3" Margin="0,8,0,0"
+                        Background="{ThemeResource ControlStrokeColorSecondaryBrush}" />
+
+                <!-- 表头 -->
+                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="Component" FontWeight="Bold"
+                           Margin="0,8,0,0" HorizontalAlignment="Left" />
+                <TextBlock Grid.Row="1" Grid.Column="1" x:Uid="ScoredItems"
+                           Margin="0,8,0,0" HorizontalAlignment="Left" />
+                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="SubScore"
+                           Margin="0,8,0,0" HorizontalAlignment="Center" />
+                <TextBlock Grid.Row="1" Grid.Column="3" x:Uid="BaseScore"
+                           Margin="0,8,0,0" HorizontalAlignment="Center" />
+
+                <!-- ① 组件 -->
+                <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="Processor" FontWeight="Bold" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="MemoryRAM" FontWeight="Bold" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="5" Grid.Column="0" x:Uid="Graphics" FontWeight="Bold" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="6" Grid.Column="0" x:Uid="GamingGraphics" FontWeight="Bold" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="7" Grid.Column="0" x:Uid="PrimaryDisk" FontWeight="Bold" Margin="0,10,0,0" />
+
+                <!-- ② 评分的项目 -->
+                <TextBlock Grid.Row="3" Grid.Column="1" x:Uid="CalcPerSecond" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="4" Grid.Column="1" x:Uid="MemoryOps" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="5" Grid.Column="1" x:Uid="DesktopGraphics" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="6" Grid.Column="1" x:Uid="GamingGraphicsDesc" Margin="0,10,0,0" />
+                <TextBlock Grid.Row="7" Grid.Column="1" x:Uid="DiskTransferRate" Margin="0,10,0,0" />
+
+                <!-- ③ 子分数：并列最低分的行显示「左边两角圆角、右边无圆角」的背景
+                     （ControlCornerRadius = 4，左侧两角为 4，右侧两角为 0） -->
+                <Grid Grid.Row="3" Grid.Column="2" Margin="0,10,0,0">
+                    <Border x:Name="CPUScoreBackground" Visibility="Collapsed"
+                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="4,0,0,4" />
+                    <TextBlock x:Name="CPUScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
+                </Grid>
+                <Grid Grid.Row="4" Grid.Column="2" Margin="0,10,0,0">
+                    <Border x:Name="MemoryScoreBackground" Visibility="Collapsed"
+                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="4,0,0,4" />
+                    <TextBlock x:Name="MemoryScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
+                </Grid>
+                <Grid Grid.Row="5" Grid.Column="2" Margin="0,10,0,0">
+                    <Border x:Name="GraphicsScoreBackground" Visibility="Collapsed"
+                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="4,0,0,4" />
+                    <TextBlock x:Name="GraphicsScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
+                </Grid>
+                <Grid Grid.Row="6" Grid.Column="2" Margin="0,10,0,0">
+                    <Border x:Name="D3DScoreBackground" Visibility="Collapsed"
+                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="4,0,0,4" />
+                    <TextBlock x:Name="D3DScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
+                </Grid>
+                <Grid Grid.Row="7" Grid.Column="2" Margin="0,10,0,0">
+                    <Border x:Name="DiskScoreBackground" Visibility="Collapsed"
+                            Background="{ThemeResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="4,0,0,4" />
+                    <TextBlock x:Name="DiskScore" x:Uid="NoScoredXAML" HorizontalAlignment="Center" />
+                </Grid>
+
+                <!-- ④ 基本分数：除标题行外，整列一块无圆角背景（内容 96，左右各留 16） -->
+                <Border x:Name="TotalScorePanel" Grid.Row="3" Grid.RowSpan="5" Grid.Column="3"
+                        Margin="0,0,0,0"
+                        Background="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="5">
                         <Border x:Name="RectangleBackground"
-                            Background="{ThemeResource AccentTextFillColorTertiaryBrush}" 
-                            CornerRadius="{StaticResource OverlayCornerRadius}" 
-                            Width="48" 
-                            Height="48">
+                                Width="48"
+                                Height="48"
+                                HorizontalAlignment="Center"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                CornerRadius="{StaticResource ControlCornerRadius}">
                             <TextBlock
                                 x:Name="WinSPRLevel"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Foreground="White"
+                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                                 FontSize="20"
                                 FontWeight="Bold"
                             />
                         </Border>
-                        <TextBlock x:Name="MinScoreText" x:Uid="subScoreTip" HorizontalAlignment="Center" Margin="0 78 0 0" />
-                    </Grid>
-                </Canvas>
-                <Line Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
-                      X1="-10" Y1="0"
-                      X2="790" Y2="0"
-                      StrokeThickness="3"  Margin = "0 0 0 0" />
-                <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="Component" Margin = "0 8 0 0" FontWeight="Bold" />
-                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="ScoredItems" Margin = "140 8 0 0"/>
-                <TextBlock Grid.Row="1" Grid.Column="2" x:Uid="SubScore" Margin = "460 8 0 0"/>
-                <TextBlock Grid.Row="1" Grid.Column="3" x:Uid="BaseScore" Margin = "590 8 0 0"/>
-                <Line Stroke="{ThemeResource ControlStrokeColorSecondaryBrush}"
-                      X1="-10" Y1="0"
-                      X2="790" Y2="0"
-                      StrokeThickness="3"  Margin = "0 36 0 0" />
-                <TextBlock Grid.Row = "2" Grid.Column="0" x:Uid="Processor"  FontWeight="Bold" Margin = "0 45 0 0"/>
-                <TextBlock Grid.Row = "3" Grid.Column="0" x:Uid="GamingGraphics"  FontWeight="Bold" Margin = "0 135 0 0"/>
-                <TextBlock Grid.Row = "4" Grid.Column="0" x:Uid="PrimaryDisk"  FontWeight="Bold" Margin = "0 165 0 0"/>
-                <TextBlock Grid.Row = "5" Grid.Column="0" x:Uid="Graphics"  FontWeight="Bold" Margin = "0 105 0 0"/>
-                <TextBlock Grid.Row = "6" Grid.Column="0" x:Uid="MemoryRAM" FontWeight="Bold" Margin = "0 75 0 0"/>
-                <TextBlock Grid.Row = "2" Grid.Column="1" x:Uid="CalcPerSecond" Margin = "140 45 0 0"/>
-                <TextBlock Grid.Row = "3" Grid.Column="1" x:Uid="GamingGraphicsDesc" Margin = "140 135 0 0"/>
-                <TextBlock Grid.Row = "4" Grid.Column="1" x:Uid="DiskTransferRate" Margin = "140 165 0 0"/>
-                <TextBlock Grid.Row = "5" Grid.Column="1" x:Uid="DesktopGraphics" Margin = "140 105 0 0"/>
-                <TextBlock Grid.Row = "6" Grid.Column="1" x:Uid="MemoryOps" Margin = "140 75 0 0"/>
-                <TextBlock Grid.Row = "2" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 45 0 0" x:Name = "CPUScore" />
-                <TextBlock Grid.Row = "3" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 135 0 0" x:Name = "D3DScore" />
-                <TextBlock Grid.Row = "4" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 165 0 0" x:Name = "DiskScore" />
-                <TextBlock Grid.Row = "5" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 105 0 0" x:Name = "GraphicsScore" />
-                <TextBlock Grid.Row = "6" Grid.Column="2" x:Uid="NoScoredXAML" Margin = "460 75 0 0" x:Name = "MemoryScore" />
+                        <TextBlock x:Name="MinScoreText" x:Uid="subScoreTip"
+                                   Width="96" TextAlignment="Center" TextWrapping="Wrap"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Border>
             </Grid>
 
-            <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin = "0 24 0 0" Spacing="5" >
-                <StackPanel x:Name="LatestTip" Grid.Row = "1" Orientation = "Horizontal" Spacing="440">
-                    <TextBlock x:Uid="LatestScore" ></TextBlock>
-                    <HyperlinkButton x:Uid="RerunAssessment" Click="RunScore" />
-                </StackPanel>
-                <Grid Grid.Row = "1">
-                    <TextBlock x:Name="LatestUpdateTime" Margin = "0 4 0 0" />
-                    <HyperlinkButton x:Uid="ReloadAssessment" Click="GetScore" Margin="566 4 0 0" />
+            <StackPanel Grid.Row = "1" Orientation = "Vertical" Margin = "0 24 0 8" HorizontalAlignment="Stretch">
+                <Grid x:Name="LatestTip">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" x:Uid="LatestScore" ></TextBlock>
+                    <HyperlinkButton Grid.Column="1" x:Uid="RerunAssessment" Click="RunScore" />
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" x:Name="LatestUpdateTime" Margin = "0 4 0 0" />
+                    <HyperlinkButton Grid.Column="1" x:Uid="ReloadAssessment" Click="GetScore" />
                 </Grid>
             </StackPanel>
 
-            <Expander Width="680" HorizontalContentAlignment="Left" Padding="0" Margin="0 16 0 0">
-                <Expander.Header>
-                    <TextBlock x:Uid="AdvancedInfo" />
-                </Expander.Header>
-                <Expander.Content>
-                    <StackPanel Width="660" Margin="8 8 0 8">
-                        <TextBlock x:Uid="SelectScoreFile" />
-                        <ComboBox x:Name="FileComboBox"
-                                DisplayMemberPath="Name"
-                                SelectedValuePath="FullName"
-                                SelectionChanged="SelectionChanged"
-                                x:Uid="SelectFilePlaceholder"
-                                Width="400"
-                                HorizontalAlignment="Left"  Margin="0 8 0 0" />
-                        <SelectorBar x:Name="SelectorBar" SelectionChanged="selecterBar_SelectionChanged" Visibility="Collapsed">
-                            <SelectorBarItem x:Name="Friendly" x:Uid="Visualized" IsSelected="True" />
-                            <SelectorBarItem x:Name="SourceCode" x:Uid="SourceCode" />
-                        </SelectorBar>
+            <toolkit:SettingsExpander x:Uid="Advanced">
+                <toolkit:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE710;" />
+                </toolkit:SettingsExpander.HeaderIcon>
+                <toolkit:SettingsExpander.Items>
+                    <!--  ContentAlignment 必须是 Vertical（Stretch）：
+                          默认的 Right 会把 Content 放进模板里那个 Auto 列，
+                          该列用无限宽度测量内容，于是横向 "Auto" 的 ScrollViewer
+                          报出自己内容的完整宽度（被撑到 1000+），Content 被排到卡片真实宽度之外，
+                          卡片右侧的内容（删除/刷新按钮）就被裁掉看不见了。
+                          也不会再出现 "内容窄时贴在右边、左边留白"。  -->
+                    <toolkit:SettingsCard  Padding="0 0 0 0" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                          ContentAlignment="Vertical" HorizontalContentAlignment="Stretch">
+                        <StackPanel Margin="8" HorizontalAlignment="Stretch">
+                            <TextBlock x:Uid="SelectScoreFile" />
+                            <ComboBox x:Name="FileComboBox"
+                                    DisplayMemberPath="Name"
+                                    SelectedValuePath="FullName"
+                                    SelectionChanged="SelectionChanged"
+                                    x:Uid="SelectFilePlaceholder"
+                                    Width="400"
+                                    HorizontalAlignment="Left"  Margin="0 8 0 0" />
+                            <SelectorBar x:Name="SelectorBar" SelectionChanged="selecterBar_SelectionChanged" Visibility="Collapsed">
+                                <SelectorBarItem x:Name="Friendly" x:Uid="Visualized" IsSelected="True" />
+                                <SelectorBarItem x:Name="SourceCode" x:Uid="SourceCode" />
+                            </SelectorBar>
 
-                        <InfoBar x:Name="LoadingFileErrorBar" Severity="Error" IsOpen="False"  x:Uid="LoadFileErrorTitle">
-                            <InfoBar.ActionButton>
-                                <Button 
+                            <InfoBar x:Name="LoadingFileErrorBar" Severity="Error" IsOpen="False"  x:Uid="LoadFileErrorTitle">
+                                <InfoBar.ActionButton>
+                                    <Button 
                                     x:Uid="RefreshXAML"
                                     Click="RefreshFileButton_Click"
                                 />
-                            </InfoBar.ActionButton>
-                        </InfoBar>
-                        <InfoBar x:Name="LoadingSignalErrorBar" Severity="Error" x:Uid="LoadSymbolErrorTitle" />
-                        <StackPanel x:Name="LoadingPanel" Orientation="Horizontal" Spacing="16" Visibility="Collapsed">
-                            <ProgressRing x:Name="LoadingRing" />
-                            <TextBlock x:Uid="Loading" Margin="0 8 0 0" />
-                        </StackPanel>
-                        <ScrollViewer x:Name="HighlightBlockBackground" Grid.Row="3" VerticalScrollBarVisibility="Auto" 
-                              HorizontalScrollBarVisibility="Auto" MinHeight="100" MaxHeight="800" Width="650"
-                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
-                              CornerRadius="{StaticResource ControlCornerRadius}" Margin="0 4 0 0" Visibility="Collapsed"
-                        >
-                            <!-- 背景和前景由代码动态设置，以适应主题 -->
-                            <RichTextBlock 
-                                x:Name="HighlightBlock" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                FontFamily="Consolas" FontSize="14"
-                                IsTextSelectionEnabled="True" />
-                        </ScrollViewer>
-                        <ScrollViewer
-                            Margin="0 4 0 4"
-                            Padding="0 0 0 8"
-                            CornerRadius="{StaticResource ControlCornerRadius}"
-                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                            MinHeight="200"
-                            MaxHeight="1000"
-                            Width="650"
-                            HorizontalScrollBarVisibility="Auto"
-                            VerticalScrollBarVisibility="Auto"
-                            x:Name="FriendlyBackground"
-                            Visibility="Collapsed"
-                        >
-                            <StackPanel x:Name="ValuePanel" Orientation="Vertical" Spacing="8" Margin="8 8 8 12" />
+                                </InfoBar.ActionButton>
+                            </InfoBar>
+                            <InfoBar x:Name="LoadingSignalErrorBar" Severity="Error" x:Uid="LoadSymbolErrorTitle" />
+                            <StackPanel x:Name="LoadingPanel" Orientation="Horizontal" Spacing="16" Visibility="Collapsed">
+                                <ProgressRing x:Name="LoadingRing" />
+                                <TextBlock x:Uid="Loading" Margin="0 8 0 0" />
+                            </StackPanel>
+                            <ScrollViewer x:Name="HighlightBlockBackground" Grid.Row="3" VerticalScrollBarVisibility="Auto" 
+                                  HorizontalScrollBarVisibility="Auto" MinHeight="100" MaxHeight="800"
+                                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
+                                  CornerRadius="{StaticResource ControlCornerRadius}" Margin="0 4 0 0" Visibility="Collapsed"
+                            >
+                                <!-- 背景和前景由代码动态设置，以适应主题 -->
+                                <RichTextBlock 
+                                    x:Name="HighlightBlock" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                    FontFamily="Consolas" FontSize="14"
+                                    IsTextSelectionEnabled="True" />
+                            </ScrollViewer>
+                            <ScrollViewer
+                                Margin="0 4 0 4"
+                                Padding="0 0 0 8"
+                                CornerRadius="{StaticResource ControlCornerRadius}"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                MinHeight="200"
+                                MaxHeight="1000"
+                                HorizontalScrollBarVisibility="Auto"
+                                VerticalScrollBarVisibility="Auto"
+                                x:Name="FriendlyBackground"
+                                Visibility="Collapsed"
+                            >
+                                <StackPanel x:Name="ValuePanel" Orientation="Vertical" Spacing="8" Margin="8 8 8 12" />
+                            </ScrollViewer>
 
-
-                        </ScrollViewer>
-                        <StackPanel Spacing="12" HorizontalAlignment="Right" Orientation="Horizontal"  Margin="0 8 0 0" >
-                            <TextBlock x:Name="LatestWarning" x:Uid="LatestFileWarning" Margin="0 8 0 0" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-                            <Button x:Name="RemoveButton">
-                                <StackPanel Orientation="Horizontal">
-                                    <FontIcon Glyph="&#xE74D;"
-                                      Margin="0,0,8,0" />
-                                    <TextBlock x:Uid="Delete" VerticalAlignment="Center" />
-                                </StackPanel>
-                                <Button.Flyout>
-                                    <Flyout>
-                                        <StackPanel>
-                                            <TextBlock Style="{ThemeResource BaseTextBlockStyle}" x:Uid="DeleteConfirmText" Margin="0,0,0,12" />
-                                            <Button Click="DeleteFile" x:Uid="DeleteConfirmButton" />
-                                        </StackPanel>
-                                    </Flyout>
-                                </Button.Flyout>
-                            </Button>
+                            <!--  底部栏：外层 Grid 撑满卡片的真实宽度（继续扩张），
+                                  内层再靠右，这样右对齐是相对真实宽度，而不是被撑大的内容宽度  -->
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch">
+                                <Grid Margin="0 8 0 0" HorizontalAlignment="Stretch">
+                                    <StackPanel Spacing="12" Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock x:Name="LatestWarning" x:Uid="LatestFileWarning" Margin="0 8 0 0" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                        <Button x:Name="RemoveButton">
+                                            <StackPanel Orientation="Horizontal">
+                                                <FontIcon Glyph="&#xE74D;"
+                                                    Margin="0,0,8,0" />
+                                                <TextBlock x:Uid="Delete" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <Button.Flyout>
+                                                <Flyout>
+                                                    <StackPanel>
+                                                        <TextBlock Style="{ThemeResource BaseTextBlockStyle}" x:Uid="DeleteConfirmText" Margin="0,0,0,12" />
+                                                        <Button Click="DeleteFile" x:Uid="DeleteConfirmButton" />
+                                                    </StackPanel>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid Margin="0 8 0 0" HorizontalAlignment="Stretch">
+                                    <StackPanel Spacing="12" Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock x:Name="RefreshedFile" Visibility="Collapsed" x:Uid="RefreshComplete" Margin="0 8 0 0" />
+                                        <Button 
+                                            x:Name="RefreshFileButton" 
+                                            x:Uid="RefreshXAML"
+                                            Click="RefreshFileButton_Click"
+                                        />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
                         </StackPanel>
-                        <StackPanel Spacing="12" HorizontalAlignment="Right" Orientation="Horizontal"  Margin="0 8 0 0" >
-                            <TextBlock x:Name="RefreshedFile" Visibility="Collapsed" x:Uid="RefreshComplete" Margin="0 8 0 0" />
-                            <Button 
-                                    x:Name="RefreshFileButton" 
-                                    x:Uid="RefreshXAML"
-                                    Click="RefreshFileButton_Click"
-                                />
-                        </StackPanel>
-                    </StackPanel>
-                </Expander.Content>
-            </Expander>
-        </StackPanel >
+                    </toolkit:SettingsCard>
+                </toolkit:SettingsExpander.Items>
+            </toolkit:SettingsExpander>
+        </StackPanel>
         <!-- App content -->
         <Frame x:Name = "rootFrame" Grid.Row = "1" />
     </Grid>

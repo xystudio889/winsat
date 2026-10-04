@@ -186,6 +186,8 @@ public sealed partial class SettingsPage : Page
             PrimaryButtonText = Loader.GetString("RestartNow"),
             CloseButtonText = Loader.GetString("RestartLater"),
             DefaultButton = ContentDialogButton.Primary,
+            // 对话框不继承窗口内容主题，需显式跟随软件主题
+            RequestedTheme = AppTheme.CurrentElementTheme,
         }.ShowAsync();
 
         if (result == ContentDialogResult.Primary)
@@ -217,7 +219,9 @@ public sealed partial class SettingsPage : Page
             XamlRoot = this.Content.XamlRoot,
             Title = Loader.GetString("ExportWizardTitle"),
             CloseButtonText = Loader.GetString("Close"),
-            Content = new ExportChoose()
+            Content = new ExportChoose(),
+            // 对话框不继承窗口内容主题，需显式跟随软件主题
+            RequestedTheme = AppTheme.CurrentElementTheme
         };
 
         await dialog.ShowAsync();
@@ -230,7 +234,9 @@ public sealed partial class SettingsPage : Page
             XamlRoot = this.Content.XamlRoot,
             Title = Loader.GetString("ImportWizardTitle"),
             CloseButtonText = Loader.GetString("Close"),
-            Content = new ImportChoose()
+            Content = new ImportChoose(),
+            // 对话框不继承窗口内容主题，需显式跟随软件主题
+            RequestedTheme = AppTheme.CurrentElementTheme
         };
 
         await dialog.ShowAsync();
@@ -265,6 +271,8 @@ public sealed partial class SettingsPage : Page
                 PrimaryButtonText = Loader.GetString("Copy"),
                 PrimaryButtonCommand = new CopyCommand(license),
                 CloseButtonText = Loader.GetString("Close"),
+                // 对话框不继承窗口内容主题，需显式跟随软件主题
+                RequestedTheme = AppTheme.CurrentElementTheme,
             }.ShowAsync();
         }
         catch (Exception ex)
@@ -281,6 +289,8 @@ public sealed partial class SettingsPage : Page
             Title = title,
             Content = message,
             CloseButtonText = Loader.GetString("OK"),
+            // 对话框不继承窗口内容主题，需显式跟随软件主题
+            RequestedTheme = AppTheme.CurrentElementTheme,
         }.ShowAsync();
     }
 }

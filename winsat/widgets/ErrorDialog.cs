@@ -33,7 +33,9 @@ namespace winsat.widgets
                 Content = contentTextBlock,   // 将 TextBlock 赋给 Content
                 CloseButtonText = Loader.GetString("OK"),
                 PrimaryButtonText = Loader.GetString("CopyAndClose"),
-                PrimaryButtonCommand = new CopyCommand(fullMessage)
+                PrimaryButtonCommand = new CopyCommand(fullMessage),
+                // 对话框不继承窗口内容主题，需显式跟随软件主题
+                RequestedTheme = AppTheme.CurrentElementTheme
             };
 
             await err.ShowAsync();

@@ -120,9 +120,6 @@
   <data name="About.Text" xml:space="preserve">
     <value>About</value>
   </data>
-  <data name="AdvancedInfo.Text" xml:space="preserve">
-    <value>Advanced information</value>
-  </data>
   <data name="AppTheme.Description" xml:space="preserve">
     <value>Set the theme appearance of the software.</value>
   </data>
@@ -519,5 +516,11 @@ However, you will no longer be able to import this file.</value>
   </data>
   <data name="AppDescription" xml:space="preserve">
     <value>A Windows benchmarking tool made with WinUI 3</value>
+  </data>
+  <data name="Advanced.Description" xml:space="preserve">
+    <value>View detailed information for a detailed analysis of computer performance.</value>
+  </data>
+  <data name="Advanced.Header" xml:space="preserve">
+    <value>Advanced information</value>
   </data>
 </root>

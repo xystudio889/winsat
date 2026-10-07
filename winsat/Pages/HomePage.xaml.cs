@@ -318,7 +318,8 @@ namespace winsat.pages
             if (fileList.Count != 0)
             {
                 latestFile = fileList.Last();
-            } else
+            }
+            else
             {
                 latestFile = string.Empty;
                 lastIndex = -2;
@@ -371,7 +372,8 @@ namespace winsat.pages
                     FriendlyBackground.Visibility = Visibility.Collapsed;
                     LoadingPanel.Visibility = Visibility.Collapsed;
                     LoadingRing.IsActive = false;
-                } else
+                }
+                else
                 {
                     RemoveButton.Visibility = Visibility.Visible;
                     LatestWarning.Visibility = Visibility.Visible;
@@ -385,7 +387,8 @@ namespace winsat.pages
                 if (lastIndex == -2)
                 {
                     FileComboBox.SelectedIndex = FileComboBox.Items.Count - 1;
-                } else
+                }
+                else
                 {
                     FileComboBox.SelectedIndex = lastIndex;
                 }
@@ -500,7 +503,8 @@ namespace winsat.pages
                                 // 而横向 Auto 的 ScrollViewer 会把这个宽度报成"滚动容器的横向大小"，
                                 // 于是整张卡片的 Content 被撑到 1000+，右侧内容全被裁掉。
                                 // Rectangle 用 Stretch，期望宽度为 0，高度和位置与原来的 4px 线一致。
-                                var Blueline = new Rectangle() {
+                                var Blueline = new Rectangle()
+                                {
                                     Height = 4,
                                     Margin = new Thickness(160, 10, 0, 0),
                                     HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -614,11 +618,10 @@ namespace winsat.pages
 
                 // 设置显示
                 LatestTip.Visibility = Visibility.Collapsed;
-                RectangleCanvas.Visibility = Visibility.Visible;
-                MinScoreText.Visibility = Visibility.Visible;
+                TotalScorePanel.Visibility = Visibility.Visible;
                 LatestUpdateTime.Visibility = Visibility.Collapsed;
                 SetScoreBoxAccent(true);
-                score_list[6] = "2";
+                // score_list[6] = "2";
 
                 switch (score_list[6])
                 {
@@ -641,8 +644,7 @@ namespace winsat.pages
                         WinsatTipButton.Content = Loader.GetString("GetScore");
                         WinSatTip.IsOpen = true;
                         SetScoreBoxAccent(false);
-                        RectangleCanvas.Visibility = Visibility.Collapsed;
-                        MinScoreText.Visibility = Visibility.Collapsed;
+                        TotalScorePanel.Visibility = Visibility.Collapsed;
                         break;
                     default: break;
                 }
@@ -653,10 +655,52 @@ namespace winsat.pages
                 GraphicsScore.Text = score_list[3];
                 MemoryScore.Text = score_list[4];
                 WinSPRLevel.Text = score_list[7];
+
+                HighlightLowestScores();
             }
             finally
             {
                 _isDialogShowing = false;
+            }
+        }
+
+        /// <summary>
+        /// 给子分数最低的那一行（并列则都算）加上背景：左边两角圆角、右边无圆角，
+        /// 与第 4 列（基本分数）那整块无圆角背景连成一条。
+        /// 取不到数值（未跑分 / 未评分文案）或最低分为 0 时，全部不显示。
+        /// </summary>
+        private void HighlightLowestScores()
+        {
+            var cells = new (Border Background, TextBlock Text)[]
+            {
+                (CPUScoreBackground, CPUScore),
+                (MemoryScoreBackground, MemoryScore),
+                (GraphicsScoreBackground, GraphicsScore),
+                (D3DScoreBackground, D3DScore),
+                (DiskScoreBackground, DiskScore),
+            };
+
+            var values = new double?[cells.Length];
+            for (int i = 0; i < cells.Length; i++)
+            {
+                values[i] = double.TryParse(cells[i].Text.Text, NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out double value) ? value : null;
+            }
+
+            // 有取不到的值，或最低分为 0（未跑分）：不显示任何背景
+            if (values.Any(v => v is null) || values.Min(v => v!.Value) <= 0)
+            {
+                foreach (var cell in cells)
+                    cell.Background.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            double lowest = values.Min(v => v!.Value);
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Background.Visibility = values[i] == lowest
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
             }
         }
 

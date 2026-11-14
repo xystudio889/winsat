@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -523,4 +523,60 @@ However, you will no longer be able to import this file.</value>
   <data name="Advanced.Header" xml:space="preserve">
     <value>Advanced information</value>
   </data>
+  <data name="ExportWebReportTitle.Text" xml:space="preserve">
+    <value>Simplified web page</value>
+  </data>
+  <data name="ExportWebReportDesc.Text" xml:space="preserve">
+    <value>Generate a print-friendly web page with the title, score table, visualization and source code.
+However, you will not be able to import this file again.</value>
+  </data>
+  <data name="WebReportPanelHint" xml:space="preserve">
+    <value>The page is saved as .html and opened in your browser; the print layout (A4) is already included.</value>
+  </data>
+  <data name="WebReportLaunchFailed" xml:space="preserve">
+    <value>The page was generated but could not be opened in a browser.</value>
+  </data>
+  <data name="WebReportHint" xml:space="preserve">
+    <value>Press Ctrl+P in the browser to print this page; the print layout is applied automatically.</value>
+  </data>
+  <data name="PrintCard.Header" xml:space="preserve">
+    <value>Print report</value>
+  </data>
+  <data name="PrintCard.Description" xml:space="preserve">
+    <value>Print an A4 layout with the title, score table, visualization and source code; preview and printing are handled by the system print dialog.</value>
+  </data>
+  <data name="PrintButtonText.Text" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="PrintButton.AutomationProperties.Name" xml:space="preserve">
+    <value>Print the assessment report</value>
+  </data>
+  <data name="PrintDialogTitle" xml:space="preserve">
+    <value>Print report</value>
+  </data>
+  <data name="PrintSelectPrompt" xml:space="preserve">
+    <value>Select the assessment file to print:</value>
+  </data>
+  <data name="PrintConfirm" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="PrintPreparing" xml:space="preserve">
+    <value>Preparing pages…</value>
+  </data>
+  <data name="PrintNoFile" xml:space="preserve">
+    <value>There is no assessment file available.</value>
+  </data>
+  <data name="PrintFailedTitle" xml:space="preserve">
+    <value>Could not print</value>
+  </data>
+  <data name="PrintTaskName" xml:space="preserve">
+    <value>Windows Experience Index report</value>
+  </data>
+  <data name="PrintReportTitle" xml:space="preserve">
+    <value>Windows Experience Index report</value>
+  </data>
+  <data name="PrintReportSubtitle" xml:space="preserve">
+    <value>File: {0}    Generated: {1}</value>
+  </data>
+
 </root>

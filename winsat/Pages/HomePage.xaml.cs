@@ -604,7 +604,6 @@ namespace winsat.pages
         {
             LoadingFileErrorBar.IsOpen = false;
             await LoadFilesAsync();
-            RefreshedFile.Visibility = Visibility.Visible;
         }
 
         public async void GetScore(object sender, RoutedEventArgs e)

@@ -266,7 +266,7 @@
                                 <Grid Margin="0 8 0 0" HorizontalAlignment="Stretch">
                                     <StackPanel Spacing="12" Orientation="Horizontal" HorizontalAlignment="Right">
                                         <TextBlock x:Name="LatestWarning" x:Uid="LatestFileWarning" Margin="0 8 0 0" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-                                        <Button x:Name="RemoveButton">
+                                        <Button x:Name="RemoveButton" Style="{StaticResource DeleteButtonStyle}">
                                             <StackPanel Orientation="Horizontal">
                                                 <FontIcon Glyph="&#xE74D;"
                                                     Margin="0,0,8,0" />
@@ -276,7 +276,7 @@
                                                 <Flyout>
                                                     <StackPanel>
                                                         <TextBlock Style="{ThemeResource BaseTextBlockStyle}" x:Uid="DeleteConfirmText" Margin="0,0,0,12" />
-                                                        <Button Click="DeleteFile" x:Uid="DeleteConfirmButton" />
+                                                        <Button Click="DeleteFile" Style="{StaticResource DeleteButtonStyle}" x:Uid="DeleteConfirmButton" />
                                                     </StackPanel>
                                                 </Flyout>
                                             </Button.Flyout>

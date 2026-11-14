@@ -2,6 +2,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -240,6 +243,192 @@ public sealed partial class SettingsPage : Page
         };
 
         await dialog.ShowAsync();
+    }
+
+    // ---- 打印：把报告排成 A4 页面后交给系统打印 ----
+
+    /// <summary>
+    /// 打印过程中必须保持存活：文档源和分页都由它持有，
+    /// 一旦被回收，打印界面会一直等不到内容。
+    /// </summary>
+    private PrintHelper? _printHelper;
+
+    /// <summary>
+    /// 选择一份跑分文件，按打印排版生成页面，然后打开系统打印界面（预览、选打印机都在系统界面里）。
+    /// </summary>
+    private async void PrintButton_Click(object sender, RoutedEventArgs e)
+    {
+        IReadOnlyList<UIElement>? pages;
+
+        try
+        {
+            pages = await SelectAndBuildPrintPagesAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowPrintError(ex);
+            return;
+        }
+
+        if (pages is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _printHelper = new PrintHelper(pages, Loader.GetString("PrintTaskName"), ShowPrintError);
+            await _printHelper.ShowPrintUIAsync(App.MainWindow!);
+        }
+        catch (Exception ex)
+        {
+            ShowPrintError(ex);
+        }
+        finally
+        {
+            _printHelper = null;
+        }
+    }
+
+    /// <summary>打印失败时提示原因；打印线程也会回调到这里，所以自身不能再抛异常。</summary>
+    private void ShowPrintError(Exception exception)
+    {
+        try
+        {
+            ErrorDialog.Show(XamlRoot, Loader.GetString("PrintFailedTitle"), exception.ToString());
+        }
+        catch
+        {
+            // 例如系统打印界面还开着时无法再弹对话框，忽略即可
+        }
+    }
+
+    /// <summary>选文件并排好全部打印页；取消或没有文件时返回 null。</summary>
+    private async Task<IReadOnlyList<UIElement>?> SelectAndBuildPrintPagesAsync()
+    {
+        List<FileInfo> files;
+
+        try
+        {
+            files = await Task.Run(() => FileHelper.GetAnalyzableFiles()
+                .Select(path => new FileInfo(path))
+                .ToList());
+        }
+        catch (Exception ex) when (ex is ArgumentException || ex is DirectoryNotFoundException || ex is UnauthorizedAccessException)
+        {
+            files = new List<FileInfo>();
+        }
+
+        if (files.Count == 0)
+        {
+            await ShowMessageAsync(Loader.GetString("PrintFailedTitle"), Loader.GetString("PrintNoFile"));
+            return null;
+        }
+
+        var fileSelector = new ComboBox
+        {
+            DisplayMemberPath = "Name",
+            SelectedValuePath = "FullName",
+            ItemsSource = files,
+            PlaceholderText = Loader.GetString("SelectFilePlaceholder"),
+            MinWidth = 360,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            SelectedIndex = files.Count - 1, // 默认最新一份
+        };
+
+        var preparing = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Spacing = 12,
+            Visibility = Visibility.Collapsed,
+        };
+
+        preparing.Children.Add(new ProgressRing { IsActive = true, Width = 20, Height = 20 });
+        preparing.Children.Add(new TextBlock
+        {
+            Text = Loader.GetString("PrintPreparing"),
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+
+        var errorText = new TextBlock
+        {
+            Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"],
+            TextWrapping = TextWrapping.Wrap,
+            Visibility = Visibility.Collapsed,
+        };
+
+        var content = new StackPanel { Spacing = 8, MinWidth = 360 };
+        content.Children.Add(new TextBlock { Text = Loader.GetString("PrintSelectPrompt") });
+        content.Children.Add(fileSelector);
+        content.Children.Add(preparing);
+        content.Children.Add(errorText);
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = Loader.GetString("PrintDialogTitle"),
+            Content = content,
+            PrimaryButtonText = Loader.GetString("PrintConfirm"),
+            CloseButtonText = Loader.GetString("Close"),
+            DefaultButton = ContentDialogButton.Primary,
+            // 对话框不继承窗口内容主题，需显式跟随软件主题
+            RequestedTheme = AppTheme.CurrentElementTheme,
+        };
+
+        IReadOnlyList<UIElement>? pages = null;
+        bool dialogClosed = false;
+
+        // 生成过程中用户可能直接关闭对话框：结果要丢弃，也不能再 Hide 已关闭的对话框
+        dialog.Closed += (_, _) => dialogClosed = true;
+
+        dialog.PrimaryButtonClick += async (_, args) =>
+        {
+            args.Cancel = true;
+
+            if (fileSelector.SelectedItem is not FileInfo file)
+            {
+                errorText.Text = Loader.GetString("PrintNoFile");
+                errorText.Visibility = Visibility.Visible;
+                return;
+            }
+
+            errorText.Visibility = Visibility.Collapsed;
+            preparing.Visibility = Visibility.Visible;
+            fileSelector.IsEnabled = false;
+            dialog.IsPrimaryButtonEnabled = false;
+
+            try
+            {
+                ReportData data = await ReportData.CreateAsync(file.FullName);
+
+                if (dialogClosed)
+                {
+                    return;
+                }
+
+                pages = PrintReportLayout.CreatePages(data, PrintMeasureHost);
+                dialog.Hide();
+            }
+            catch (Exception ex)
+            {
+                pages = null;
+
+                if (!dialogClosed)
+                {
+                    errorText.Text = ex.Message;
+                    errorText.Visibility = Visibility.Visible;
+                }
+            }
+            finally
+            {
+                preparing.Visibility = Visibility.Collapsed;
+                fileSelector.IsEnabled = true;
+                dialog.IsPrimaryButtonEnabled = true;
+            }
+        };
+
+        await dialog.ShowAsync();
+        return pages;
     }
 
     // ---- 许可证：展示 Assets/LICENSE 内容 ----

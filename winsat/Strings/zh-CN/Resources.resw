@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -521,4 +521,60 @@
   <data name="Advanced.Header" xml:space="preserve">
     <value>高级信息</value>
   </data>
+  <data name="ExportWebReportTitle.Text" xml:space="preserve">
+    <value>精简版网页</value>
+  </data>
+  <data name="ExportWebReportDesc.Text" xml:space="preserve">
+    <value>生成适合打印的网页，包含标题、分数表、可视化和源码。
+但是这样你就不能再次导入此文件。</value>
+  </data>
+  <data name="WebReportPanelHint" xml:space="preserve">
+    <value>网页会保存为 .html 并在浏览器中打开，打印排版（A4）已内置。</value>
+  </data>
+  <data name="WebReportLaunchFailed" xml:space="preserve">
+    <value>网页已生成，但无法用浏览器打开。</value>
+  </data>
+  <data name="WebReportHint" xml:space="preserve">
+    <value>在浏览器中按 Ctrl+P 打印此页；网页会自动套用打印排版。</value>
+  </data>
+  <data name="PrintCard.Header" xml:space="preserve">
+    <value>打印报告</value>
+  </data>
+  <data name="PrintCard.Description" xml:space="preserve">
+    <value>按 A4 排版打印：标题、分数表、可视化和源码，预览和打印由系统打印界面负责。</value>
+  </data>
+  <data name="PrintButtonText.Text" xml:space="preserve">
+    <value>打印</value>
+  </data>
+  <data name="PrintButton.AutomationProperties.Name" xml:space="preserve">
+    <value>打印跑分报告</value>
+  </data>
+  <data name="PrintDialogTitle" xml:space="preserve">
+    <value>打印报告</value>
+  </data>
+  <data name="PrintSelectPrompt" xml:space="preserve">
+    <value>选择要打印的跑分文件：</value>
+  </data>
+  <data name="PrintConfirm" xml:space="preserve">
+    <value>打印</value>
+  </data>
+  <data name="PrintPreparing" xml:space="preserve">
+    <value>正在排版…</value>
+  </data>
+  <data name="PrintNoFile" xml:space="preserve">
+    <value>没有可用的跑分文件。</value>
+  </data>
+  <data name="PrintFailedTitle" xml:space="preserve">
+    <value>无法打印</value>
+  </data>
+  <data name="PrintTaskName" xml:space="preserve">
+    <value>Windows 体验指数报告</value>
+  </data>
+  <data name="PrintReportTitle" xml:space="preserve">
+    <value>Windows 体验指数报告</value>
+  </data>
+  <data name="PrintReportSubtitle" xml:space="preserve">
+    <value>文件：{0}    生成时间：{1}</value>
+  </data>
+
 </root>

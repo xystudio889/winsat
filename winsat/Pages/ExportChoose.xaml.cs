@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.Windows.Storage.Pickers;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,10 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.System;
 using winsat.helpers;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -28,12 +32,25 @@ namespace winsat.pages
         public string latestFile; // 最新文件
         public string openFilePath; // 打开的文件路径
 
+        /// <summary>“刷新完成”提示渐显后停留的时长。</summary>
+        private static readonly TimeSpan RefreshCompleteDisplayDuration = TimeSpan.FromSeconds(3);
+
+        private const int RefreshCompleteFadeInMilliseconds = 200;
+        private const int RefreshCompleteFadeOutMilliseconds = 200;
+
+        /// <summary>每个提示当前的显示版本号，重复刷新时旧计时器不会误隐藏新提示。</summary>
+        private readonly Dictionary<FrameworkElement, int> _refreshCompleteVersions = new();
+
+        /// <summary>每个提示当前正在播放的透明度动画，重新显示前先停掉，避免两个动画同时改 Opacity。</summary>
+        private readonly Dictionary<FrameworkElement, Storyboard> _refreshCompleteStoryboards = new();
+
         public ExportChoose()
         {
             InitializeComponent();
             getFileList();
 
             FileComboBox.ItemsSource = Files; // 设置容器
+            ReportFileComboBox.ItemsSource = Files; // “精简版网页”共用同一份文件列表
 
             LoadFilesAsync();
         }
@@ -92,11 +109,11 @@ namespace winsat.pages
 
         /// <summary>
         /// 按当前模式与实际选择情况刷新“导出”按钮：
-        /// HTML 模式要求选中存在的文件，包模式要求至少勾选一个文件
+        /// HTML / 精简版网页模式要求选中存在的文件，包模式要求至少勾选一个文件
         /// </summary>
         private void UpdateExportButtonState()
         {
-            if (ExportButton is null || HTMLExport is null || WSTExport is null) return;
+            if (ExportButton is null || HTMLExport is null || WSTExport is null || WebReportExport is null) return;
 
             if (HTMLExport.Visibility == Visibility.Visible)
             {
@@ -106,26 +123,136 @@ namespace winsat.pages
             {
                 ExportButton.IsEnabled = GetCheckedWstFiles().Count > 0;
             }
+            else if (WebReportExport.Visibility == Visibility.Visible)
+            {
+                ExportButton.IsEnabled = HasValidReportFile();
+            }
             else
             {
                 ExportButton.IsEnabled = true;
             }
         }
 
+        /// <summary>
+        /// “精简版网页”是否已选中一个真实存在的跑分文件
+        /// </summary>
+        private bool HasValidReportFile() =>
+            ReportFileComboBox.SelectedItem is FileInfo file && File.Exists(file.FullName);
+
+        /// <summary>
+        /// 精简版网页模式：所选文件已被删除时给出提示，并同步“导出”按钮状态
+        /// </summary>
+        private void UpdateReportExportState()
+        {
+            if (ReportFileComboBox is null) return;
+
+            if (ReportFileComboBox.SelectedItem is FileInfo file && !File.Exists(file.FullName))
+            {
+                ReportLoadingErrorBar.Title = Loader.GetString("LoadFileErrorTitleCS");
+                ReportLoadingErrorBar.Message = Loader.GetString("FileNotExist");
+                ReportLoadingErrorBar.IsOpen = true;
+            }
+            else
+            {
+                ReportLoadingErrorBar.IsOpen = false;
+            }
+
+            UpdateExportButtonState();
+        }
+
+        private void ReportSelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateReportExportState();
+
+        /// <summary>
+        /// 渐显“刷新完成”提示，停留 3 秒后渐隐并隐藏。
+        /// 重复触发时会重新计时，旧计时器不会把新提示提前隐藏。
+        /// </summary>
+        private void ShowRefreshComplete(FrameworkElement target)
+        {
+            int version = _refreshCompleteVersions.TryGetValue(target, out int current) ? current + 1 : 1;
+            _refreshCompleteVersions[target] = version;
+
+            // 若提示当前是隐藏状态（例如刚被切换到别的模式时手动折叠），必须从 0 开始渐显；
+            // 若它已经可见，则从当前透明度继续，避免闪烁。
+            double startOpacity = target.Visibility == Visibility.Visible ? target.Opacity : 0;
+            target.Visibility = Visibility.Visible;
+
+            StartRefreshCompleteFade(target, startOpacity, 1, RefreshCompleteFadeInMilliseconds);
+            _ = HideRefreshCompleteAfterDelayAsync(target, version);
+        }
+
+        private async Task HideRefreshCompleteAfterDelayAsync(FrameworkElement target, int version)
+        {
+            await Task.Delay(RefreshCompleteDisplayDuration);
+
+            if (!IsCurrentRefreshComplete(target, version))
+            {
+                return;
+            }
+
+            // 渐显已结束并保持在 1，这里显式从 1 开始渐隐，不依赖读取动画后的当前值。
+            StartRefreshCompleteFade(target, 1, 0, RefreshCompleteFadeOutMilliseconds);
+            await Task.Delay(RefreshCompleteFadeOutMilliseconds);
+
+            if (!IsCurrentRefreshComplete(target, version))
+            {
+                return;
+            }
+
+            if (_refreshCompleteStoryboards.Remove(target, out Storyboard? storyboard))
+            {
+                storyboard.Stop();
+            }
+
+            target.Visibility = Visibility.Collapsed;
+            target.Opacity = 0;
+        }
+
+        private bool IsCurrentRefreshComplete(FrameworkElement target, int version) =>
+            _refreshCompleteVersions.TryGetValue(target, out int current) && current == version;
+
+        private void StartRefreshCompleteFade(FrameworkElement target, double from, double to, int durationMilliseconds)
+        {
+            if (_refreshCompleteStoryboards.Remove(target, out Storyboard? previous))
+            {
+                previous.Stop();
+            }
+
+            var animation = new DoubleAnimation
+            {
+                From = from,
+                To = to,
+                Duration = new Duration(TimeSpan.FromMilliseconds(durationMilliseconds)),
+                FillBehavior = FillBehavior.HoldEnd,
+            };
+
+            Storyboard.SetTarget(animation, target);
+            Storyboard.SetTargetProperty(animation, "Opacity");
+
+            var storyboard = new Storyboard();
+            storyboard.Children.Add(animation);
+
+            _refreshCompleteStoryboards[target] = storyboard;
+            storyboard.Begin();
+        }
+
         public async void RefreshFileButton_Click(object sender, RoutedEventArgs e)
         {
             LoadingFileErrorBar.IsOpen = false;
-            RefreshComplete.Visibility = Visibility.Visible; // 显示刷新完成按钮
+            ShowRefreshComplete(RefreshComplete);
             await LoadFilesAsync();
         }
 
         private async Task LoadFilesAsync()
         {
+            // 刷新前后保持“精简版网页”的选择：文件还在就继续用它，否则回落到最新一份
+            string? previousReportSelection = (ReportFileComboBox?.SelectedItem as FileInfo)?.FullName;
+
             try
             {
                 if (!Directory.Exists(winSatFilePath))
                 {
                     UpdateHtmlExportState();
+                    UpdateReportExportState();
                     return;
                 }
 
@@ -150,6 +277,17 @@ namespace winsat.pages
                     FileComboBox.SelectedIndex = lastIndex;
                 }
                 lastIndex = FileComboBox.SelectedIndex;
+
+                if (ReportFileComboBox is not null)
+                {
+                    int reportIndex = previousReportSelection is null
+                        ? -1
+                        : Files.ToList().FindIndex(file => string.Equals(file.FullName, previousReportSelection, StringComparison.OrdinalIgnoreCase));
+
+                    ReportFileComboBox.SelectedIndex = reportIndex >= 0
+                        ? reportIndex
+                        : ReportFileComboBox.Items.Count - 1;
+                }
             }
             catch (UnauthorizedAccessException)
             {
@@ -163,6 +301,7 @@ namespace winsat.pages
 
             // 默认选中项可能没有触发 SelectionChanged（索引未变化或列表为空），这里统一刷新一次
             UpdateHtmlExportState();
+            UpdateReportExportState();
         }
 
         private bool syncingWstOptions; // true 表示正在由代码同步勾选状态，需忽略随之触发的 Checked/Unchecked/Indeterminate
@@ -180,7 +319,7 @@ namespace winsat.pages
 
         private void RefreshWstFileButton_Click(object sender, RoutedEventArgs e)
         {
-            WSTRefreshComplete.Visibility = Visibility.Visible; // 显示刷新完成提示
+            ShowRefreshComplete(WSTRefreshComplete);
             ReloadFileList();
         }
 
@@ -366,11 +505,34 @@ namespace winsat.pages
             ReloadFileList(); // 加载完成后按勾选情况刷新“导出”按钮
         }
 
+        private void WebReportExportShow(object sender, RoutedEventArgs e)
+        {
+            SelectExport.Visibility = Visibility.Collapsed;
+            WebReportExport.Visibility = Visibility.Visible;
+            ExportSuccessBar.IsOpen = false;
+            ExportWarningBar.IsOpen = false;
+            ExportErrorBar.IsOpen = false;
+            WorkingBar.Visibility = Visibility.Collapsed;
+            WorkingRing.IsActive = false;
+            ReportRefreshComplete.Visibility = Visibility.Collapsed;
+
+            ControlBar.Visibility = Visibility.Visible;
+
+            UpdateReportExportState();
+        }
+
+        private async void RefreshReportButton_Click(object sender, RoutedEventArgs e)
+        {
+            ShowRefreshComplete(ReportRefreshComplete);
+            await LoadFilesAsync();
+        }
+
         private void OnPrevPage(object sender, RoutedEventArgs e)
         {
             SelectExport.Visibility = Visibility.Visible;
             HTMLExport.Visibility = Visibility.Collapsed;
             WSTExport.Visibility = Visibility.Collapsed;
+            WebReportExport.Visibility = Visibility.Collapsed;
 
             ControlBar.Visibility = Visibility.Collapsed;
         }
@@ -554,6 +716,61 @@ namespace winsat.pages
 
                         openFilePath = result.Path;
                     }
+                }
+            }
+            else if (WebReportExport.Visibility == Visibility.Visible)
+            {
+                ExportSuccessBar.IsOpen = false;
+                ExportWarningBar.IsOpen = false;
+                ExportErrorBar.IsOpen = false;
+
+                if (ReportFileComboBox.SelectedItem is not FileInfo reportFile || !File.Exists(reportFile.FullName))
+                {
+                    ExportErrorBar.Message = Loader.GetString("FileNotExist");
+                    ExportErrorBar.IsOpen = true;
+                    return;
+                }
+
+                savePicker.FileTypeChoices.Add(Loader.GetString("HTMLExtDesc"), new List<string> { ".html" });
+
+                var result = await savePicker.PickSaveFileAsync();
+
+                if (result == null)
+                {
+                    return;
+                }
+
+                ControlBar.Visibility = Visibility.Collapsed;
+                WorkingBar.Visibility = Visibility.Visible;
+                WorkingRing.IsActive = true;
+
+                try
+                {
+                    // 排版在应用内生成，浏览器只负责分页与打印（Ctrl+P）
+                    ReportData data = await ReportData.CreateAsync(reportFile.FullName);
+                    string html = ReportHtml.Build(data);
+
+                    await File.WriteAllTextAsync(result.Path, html, new UTF8Encoding(true));
+
+                    WebReportExport.Visibility = Visibility.Collapsed;
+                    ExportEnd.Visibility = Visibility.Visible;
+
+                    ExportSuccessBar.Message = Loader.GetString("ExportSuccessBarTitleCS") + result.Path;
+                    ExportSuccessBar.IsOpen = true;
+
+                    openFilePath = result.Path;
+                }
+                catch (Exception ex)
+                {
+                    // 生成失败时留在当前步骤，方便重试
+                    ExportErrorBar.Message = ex.Message;
+                    ExportErrorBar.IsOpen = true;
+                    ControlBar.Visibility = Visibility.Visible;
+                }
+                finally
+                {
+                    WorkingBar.Visibility = Visibility.Collapsed;
+                    WorkingRing.IsActive = false;
                 }
             }
         }

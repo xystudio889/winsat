@@ -1,6 +1,12 @@
 <div align="center">
     <img src="./imgs/logo.png" alt="logo" width="200" height="200" />
     <h1>winsat</h1>
+    <a href="https://www.microsoft.com/store/apps/9NCLTD4K6VQ5">
+    <img src="https://get.microsoft.com/images/en-us%20dark.svg" 
+        alt="Download from Microsoft Store" 
+        height="56" />
+</div>
+<div align="center">
     <a href="https://github.com/gaogaotiantian/viztracer/blob/master/LICENSE">
         <img src="https://img.shields.io/github/license/xystudio889/winsat" alt="license">
     </a>

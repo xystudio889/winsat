@@ -175,10 +175,10 @@ namespace winsat.helpers
             }
 
             // 表头
-            AddCell(grid, Loader.GetString("Component.Text"), 0, 0);
-            AddCell(grid, Loader.GetString("ScoredItems.Text"), 0, 1);
-            AddCell(grid, Loader.GetString("SubScore.Text"), 0, 2, center: true);
-            AddCell(grid, Loader.GetString("BaseScore.Text"), 0, 3, center: true);
+            AddCell(grid, Loader.GetString("cs_Component"), 0, 0);
+            AddCell(grid, Loader.GetString("cs_ScoredItems"), 0, 1);
+            AddCell(grid, Loader.GetString("cs_SubScore"), 0, 2, center: true);
+            AddCell(grid, Loader.GetString("cs_BaseScore"), 0, 3, center: true);
 
             AddRowSeparator(grid, 1, 4);
 
@@ -260,7 +260,7 @@ namespace winsat.helpers
 
             content.Children.Add(new TextBlock
             {
-                Text = Loader.GetString("subScoreTip.Text"),
+                Text = Loader.GetString("cs_subScoreTip"),
                 FontSize = 9,
                 Foreground = MutedBrush,
                 TextWrapping = TextWrapping.Wrap,

@@ -99,22 +99,23 @@
 	<!-- Publish Properties -->
 	<PropertyGroup>
 		<Version>2.2.0</Version>
-		<AssemblyVersion>$(Version).876</AssemblyVersion>
+		<AssemblyVersion>$(Version).892</AssemblyVersion>
 		<AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
 		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
 		<PublishTrimmed>False</PublishTrimmed>
 		<DefaultLanguage>zh-CN</DefaultLanguage>
-		<PackageCertificateKeyFile>winsat_TemporaryKey.pfx</PackageCertificateKeyFile>
-		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
-		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+		<AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
-		<GenerateTestArtifacts>False</GenerateTestArtifacts>
-		<AppxBundle>Never</AppxBundle>
+		<GenerateTestArtifacts>True</GenerateTestArtifacts>
+		<AppxBundle>Always</AppxBundle>
 		<AppInstallerUri>F:\code\C\C#\winsat\winsat</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-		<PackageCertificateThumbprint>38BB505B4128CDCA4AEC833CE44E7375F4884618</PackageCertificateThumbprint>
+		<AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
 	</PropertyGroup>
+	<ItemGroup>
+	  <PRIResource Remove="Strings\en-US\Resources.resw" />
+	</ItemGroup>
 </Project>
 

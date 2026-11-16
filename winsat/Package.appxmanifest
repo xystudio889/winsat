@@ -10,15 +10,15 @@
   IgnorableNamespaces="uap rescap systemai uap18">
 
 	<Identity
-	  Name="xystudio.winsat"
-	  Publisher="CN=XyStudio, O=XyStudio, L=Shanghai, S=Shanghai, C=CN"
+	  Name="XyStudio.WinUI3WinSAT"
+	  Publisher="CN=43B78B9F-0ED7-4A42-9298-A396CBFF14EA"
 	  Version="2.2.0.0" />
 
-	<mp:PhoneIdentity PhoneProductId="98ff62da-6fa9-43f8-9474-e7509cb7513f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+	<mp:PhoneIdentity PhoneProductId="c41839e1-1c3a-4e0c-8ff8-6816e3495aea" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
 	<Properties>
 		<DisplayName>ms-resource:AppDisplayName</DisplayName>
-		<PublisherDisplayName>xystudio</PublisherDisplayName>
+		<PublisherDisplayName>XyStudio</PublisherDisplayName>
 		<Logo>Assets\StoreLogo.png</Logo>
 	</Properties>
 

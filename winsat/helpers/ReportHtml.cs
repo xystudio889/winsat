@@ -105,10 +105,10 @@ namespace winsat.helpers
             builder.Append("<table>\n<colgroup>")
                 .Append("<col class=\"c0\"><col><col class=\"c2\"><col class=\"c3\">")
                 .Append("</colgroup>\n<thead>\n<tr>");
-            AppendHeader(builder, Loader.GetString("Component.Text"), false);
-            AppendHeader(builder, Loader.GetString("ScoredItems.Text"), false);
-            AppendHeader(builder, Loader.GetString("SubScore.Text"), true);
-            AppendHeader(builder, Loader.GetString("BaseScore.Text"), true);
+            AppendHeader(builder, Loader.GetString("cs_Component"), false);
+            AppendHeader(builder, Loader.GetString("cs_ScoredItems"), false);
+            AppendHeader(builder, Loader.GetString("cs_SubScore"), true);
+            AppendHeader(builder, Loader.GetString("cs_BaseScore"), true);
             builder.Append("</tr>\n</thead>\n<tbody>\n");
 
             double lowest = FindLowestScore(data);
@@ -131,7 +131,7 @@ namespace winsat.helpers
                     builder.Append("<td class=\"total\" rowspan=\"").Append(rowCount).Append("\">");
                     builder.Append("<div class=\"num\">").Append(Escape(data.TotalScore)).Append("</div>");
                     builder.Append("<div class=\"tip\">")
-                        .Append(Escape(Loader.GetString("subScoreTip.Text")))
+                        .Append(Escape(Loader.GetString("cs_subScoreTip")))
                         .Append("</div>");
                     builder.Append("</td>");
                 }

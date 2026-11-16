@@ -100,11 +100,11 @@ namespace winsat.helpers
                 // 与主页表格保持一致：处理器、内存、图形、游戏图形、主硬盘
                 Scores = new[]
                 {
-                    new ScoreRow(Loader.GetString("Processor.Text"), Loader.GetString("CalcPerSecond.Text"), scores[0]),
-                    new ScoreRow(Loader.GetString("MemoryRAM.Text"), Loader.GetString("MemoryOps.Text"), scores[4]),
-                    new ScoreRow(Loader.GetString("Graphics.Text"), Loader.GetString("DesktopGraphics.Text"), scores[3]),
-                    new ScoreRow(Loader.GetString("GamingGraphics.Text"), Loader.GetString("GamingGraphicsDesc.Text"), scores[1]),
-                    new ScoreRow(Loader.GetString("PrimaryDisk.Text"), Loader.GetString("DiskTransferRate.Text"), scores[2]),
+                    new ScoreRow(Loader.GetString("cs_Processor"), Loader.GetString("cs_CalcPerSecond"), scores[0]),
+                    new ScoreRow(Loader.GetString("cs_MemoryRAM"), Loader.GetString("cs_MemoryOps"), scores[4]),
+                    new ScoreRow(Loader.GetString("cs_Graphics"), Loader.GetString("cs_DesktopGraphics"), scores[3]),
+                    new ScoreRow(Loader.GetString("cs_GamingGraphics"), Loader.GetString("cs_GamingGraphicsDesc"), scores[1]),
+                    new ScoreRow(Loader.GetString("cs_PrimaryDisk"), Loader.GetString("cs_DiskTransferRate"), scores[2]),
                 },
                 Visualization = visualization,
                 CodeLines = codeLines,

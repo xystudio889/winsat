@@ -99,23 +99,21 @@
 	<!-- Publish Properties -->
 	<PropertyGroup>
 		<Version>2.2.0</Version>
-		<AssemblyVersion>$(Version).892</AssemblyVersion>
+		<AssemblyVersion>$(Version).893</AssemblyVersion>
 		<AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
 		<PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
 		<PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
 		<PublishTrimmed>False</PublishTrimmed>
 		<DefaultLanguage>zh-CN</DefaultLanguage>
 		<AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+		<GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
 		<GenerateTestArtifacts>True</GenerateTestArtifacts>
 		<AppxBundle>Always</AppxBundle>
-		<AppInstallerUri>F:\code\C\C#\winsat\winsat</AppInstallerUri>
-		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		<AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 	</PropertyGroup>
-	<ItemGroup>
-	  <PRIResource Remove="Strings\en-US\Resources.resw" />
-	</ItemGroup>
 </Project>
 

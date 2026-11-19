@@ -4,57 +4,53 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:systemai="http://schemas.microsoft.com/appx/manifest/systemai/windows10"
-  xmlns:uap18="http://schemas.microsoft.com/appx/manifest/uap/windows10/18"
-  IgnorableNamespaces="uap rescap systemai uap18">
+  IgnorableNamespaces="uap uap10 rescap systemai">
 
-	<Identity
-	  Name="XyStudio.WinUI3WinSAT"
-	  Publisher="CN=43B78B9F-0ED7-4A42-9298-A396CBFF14EA"
-	  Version="2.2.0.0" />
+  <Identity
+    Name="XyStudio.WinUI3WinSAT"
+    Publisher="CN=43B78B9F-0ED7-4A42-9298-A396CBFF14EA"
+    Version="2.2.0.0" />
 
-	<mp:PhoneIdentity PhoneProductId="c41839e1-1c3a-4e0c-8ff8-6816e3495aea" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="cc81d907-e565-4fa6-a4ea-687ff8c529a5" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
-	<Properties>
-		<DisplayName>ms-resource:AppDisplayName</DisplayName>
-		<PublisherDisplayName>XyStudio</PublisherDisplayName>
-		<Logo>Assets\StoreLogo.png</Logo>
-	</Properties>
+  <Properties>
+    <DisplayName>XyStudio Windows Experience Index</DisplayName>
+    <PublisherDisplayName>XyStudio</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:PackageIntegrity>
+      <uap10:Content Enforcement="on"/>
+    </uap10:PackageIntegrity>
+  </Properties>
 
-	<Dependencies>
-		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
-		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
-	</Dependencies>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
+  </Dependencies>
 
-	<Resources>
-		<Resource Language="x-generate"/>
-	</Resources>
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
 
-	<Applications>
-		<Application Id="App"
-		  Executable="$targetnametoken$.exe"
-		  EntryPoint="$targetentrypoint$" >
-			<uap:VisualElements
-			  DisplayName="ms-resource:AppDisplayName"
-			  Description="ms-resource:AppDescription"
-			  BackgroundColor="transparent"
-			  Square150x150Logo="Assets\Square150x150Logo.png"
-			  Square44x44Logo="Assets\Square44x44Logo.png">
-				<uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png">
-					<uap:ShowNameOnTiles>
-						<uap:ShowOn Tile="square150x150Logo"/>
-						<uap:ShowOn Tile="square310x310Logo"/>
-						<uap:ShowOn Tile="wide310x150Logo"/>
-					</uap:ShowNameOnTiles>
-				</uap:DefaultTile >
-				<uap:SplashScreen Image="Assets\SplashScreen.png" />
-				<uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badge"/>
-			</uap:VisualElements>
-		</Application>
-	</Applications>
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="XyStudio Windows Experience Index"
+        Description="XyStudio Windows Experience Index: A Windows benchmarking tool made with WinUI 3."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
 
-	<Capabilities>
-		<rescap:Capability Name="runFullTrust" />
-	</Capabilities>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
 </Package>

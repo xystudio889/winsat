@@ -128,7 +128,7 @@
                     <toolkit:SettingsExpander
                         x:Uid="ProductInfo">
                         <toolkit:SettingsExpander.HeaderIcon>
-                            <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/BadgeLogo.png" />
+                            <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/Square44x44Logo.png" Width="64" Height="64"  />
                         </toolkit:SettingsExpander.HeaderIcon>
                         <TextBlock
                             x:Name="versionBlock"

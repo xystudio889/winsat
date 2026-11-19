@@ -511,12 +511,6 @@ However, you will no longer be able to import this file.</value>
   <data name="ExportCard.Description" xml:space="preserve">
     <value>It can be used to do performance analysis for engineers, or to back up results.</value>
   </data>
-  <data name="AppDisplayName" xml:space="preserve">
-    <value>WinUI 3 WinSAT</value>
-  </data>
-  <data name="AppDescription" xml:space="preserve">
-    <value>A Windows benchmarking tool made with WinUI 3</value>
-  </data>
   <data name="Advanced.Description" xml:space="preserve">
     <value>View detailed information for a detailed analysis of computer performance.</value>
   </data>
@@ -578,49 +572,49 @@ However, you will not be able to import this file again.</value>
   <data name="PrintReportSubtitle" xml:space="preserve">
     <value>File: {0}    Generated: {1}</value>
   </data>
-	<data name="cs_Component" xml:space="preserve">
-  <value>Component</value>
-</data>
-	<data name="cs_ScoredItems" xml:space="preserve">
-  <value>Rated item</value>
-</data>
-	<data name="cs_SubScore" xml:space="preserve">
-  <value>Sub-score</value>
-</data>
-	<data name="cs_BaseScore" xml:space="preserve">
-  <value>Base score</value>
-</data>
-	<data name="cs_subScoreTip" xml:space="preserve">
-  <value>Decided by the lowest sub-score</value>
-</data>
-	<data name="cs_Processor" xml:space="preserve">
-  <value>Processor:</value>
-</data>
-	<data name="cs_MemoryRAM" xml:space="preserve">
-  <value>Memory (RAM):</value>
-</data>
-	<data name="cs_Graphics" xml:space="preserve">
-  <value>Graphics:</value>
-</data>
-	<data name="cs_GamingGraphics" xml:space="preserve">
-  <value>Gaming graphics:</value>
-</data>
-	<data name="cs_PrimaryDisk" xml:space="preserve">
-  <value>Primary hard disk:</value>
-</data>
-	<data name="cs_DiskTransferRate" xml:space="preserve">
-  <value>Disk data transfer rate</value>
-</data>
-	<data name="cs_CalcPerSecond" xml:space="preserve">
-  <value>Calculations per second</value>
-</data>
-	<data name="cs_DesktopGraphics" xml:space="preserve">
-  <value>Desktop graphics performance</value>
-</data>
-	<data name="cs_MemoryOps" xml:space="preserve">
-  <value>Memory operations per second</value>
-</data>
-	<data name="cs_GamingGraphicsDesc" xml:space="preserve">
-  <value>3D business and gaming graphics performance</value>
-</data>
+  <data name="cs_Component" xml:space="preserve">
+    <value>Component</value>
+  </data>
+  <data name="cs_ScoredItems" xml:space="preserve">
+    <value>Rated item</value>
+  </data>
+  <data name="cs_SubScore" xml:space="preserve">
+    <value>Sub-score</value>
+  </data>
+  <data name="cs_BaseScore" xml:space="preserve">
+    <value>Base score</value>
+  </data>
+  <data name="cs_subScoreTip" xml:space="preserve">
+    <value>Decided by the lowest sub-score</value>
+  </data>
+  <data name="cs_Processor" xml:space="preserve">
+    <value>Processor:</value>
+  </data>
+  <data name="cs_MemoryRAM" xml:space="preserve">
+    <value>Memory (RAM):</value>
+  </data>
+  <data name="cs_Graphics" xml:space="preserve">
+    <value>Graphics:</value>
+  </data>
+  <data name="cs_GamingGraphics" xml:space="preserve">
+    <value>Gaming graphics:</value>
+  </data>
+  <data name="cs_PrimaryDisk" xml:space="preserve">
+    <value>Primary hard disk:</value>
+  </data>
+  <data name="cs_DiskTransferRate" xml:space="preserve">
+    <value>Disk data transfer rate</value>
+  </data>
+  <data name="cs_CalcPerSecond" xml:space="preserve">
+    <value>Calculations per second</value>
+  </data>
+  <data name="cs_DesktopGraphics" xml:space="preserve">
+    <value>Desktop graphics performance</value>
+  </data>
+  <data name="cs_MemoryOps" xml:space="preserve">
+    <value>Memory operations per second</value>
+  </data>
+  <data name="cs_GamingGraphicsDesc" xml:space="preserve">
+    <value>3D business and gaming graphics performance</value>
+  </data>
 </root>

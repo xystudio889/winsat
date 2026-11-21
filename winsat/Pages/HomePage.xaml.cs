@@ -348,7 +348,8 @@ namespace winsat.pages
                         CloseButtonText = Loader.GetString("OK"),
                         XamlRoot = this.Content.XamlRoot,
                         // 对话框不继承窗口内容主题，需显式跟随软件主题
-                        RequestedTheme = AppTheme.CurrentElementTheme
+                        RequestedTheme = AppTheme.CurrentElementTheme,
+                        Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
                     }.ShowAsync();
                     return;
                 }
@@ -403,7 +404,8 @@ namespace winsat.pages
                     CloseButtonText = Loader.GetString("OK"),
                     XamlRoot = this.Content.XamlRoot,
                     // 对话框不继承窗口内容主题，需显式跟随软件主题
-                    RequestedTheme = AppTheme.CurrentElementTheme
+                    RequestedTheme = AppTheme.CurrentElementTheme,
+                    Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
                 }.ShowAsync();
             }
             catch (ArgumentException)

@@ -110,7 +110,7 @@
     <!-- Publish Properties -->
     <PropertyGroup>
         <Version>2.2.0</Version>
-        <AssemblyVersion>$(Version).907</AssemblyVersion>
+        <AssemblyVersion>$(Version).912</AssemblyVersion>
         <AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
         <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
         <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
@@ -122,7 +122,7 @@
         <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
         <GenerateTestArtifacts>True</GenerateTestArtifacts>
         <AppxBundle>Always</AppxBundle>
-        <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
+        <AppxBundlePlatforms>x64</AppxBundlePlatforms>
         <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     </PropertyGroup>
     <!--
@@ -133,14 +133,12 @@
         真要出 ARM64 包：pyd 得在 arm64 机器上用 arm64 的 Python 3.14 重编，
         然后换掉 parser\parser.dll、parser\xml_parser.pyd 和 parser\runtime\。
     -->
-    <Target Name="WarnParserPayloadPlatform" BeforeTargets="Build"
-            Condition="'$(Platform)' == 'x86' or '$(Platform)' == 'ARM64' or '$(Platform)' == 'arm64'">
+    <Target Name="WarnParserPayloadPlatform" BeforeTargets="Build" Condition="'$(Platform)' == 'x86' or '$(Platform)' == 'ARM64' or '$(Platform)' == 'arm64'">
         <Warning Text="parser\ 里的 parser.dll / xml_parser.pyd 是 x64 版本（当前 Platform=$(Platform)），运行时会加载失败；打 ARM64/x86 包前需要重新编译这两个 .pyd。" />
     </Target>
 
     <!-- parser\ 还没组装时给一句能照着敲的命令，别等运行时报 DllNotFoundException -->
-    <Target Name="WarnMissingParserPayload" BeforeTargets="Build"
-            Condition="!Exists('$(MSBuildProjectDirectory)\parser\parser.dll')">
+    <Target Name="WarnMissingParserPayload" BeforeTargets="Build" Condition="!Exists('$(MSBuildProjectDirectory)\parser\parser.dll')">
         <Warning Text="winsat\parser\parser.dll 不存在：先执行仓库根目录的 .\stage_parser.ps1 组装解析器组件（否则应用启动后无法分析跑分）。" />
     </Target>
 </Project>

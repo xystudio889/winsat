@@ -14,41 +14,6 @@
                 Margin="0,40,36,36"
                 Style="{StaticResource TitleTextBlockStyle}"
                 Text="Debugging" />
-
-            <ScrollView HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Visible">
-                <!-- Content body -->
-                <!--
-                    自定义危险按钮样式演示（Styles/DeleteButtonStyle.xaml）。
-                    悬停 / 按下为交互态，可直接用鼠标或键盘观察；禁用态用 IsEnabled="False"。
-                    深浅色随窗口主题自动切换，无需在此处写任何颜色。
-                -->
-                <StackPanel Spacing="12" Margin="0,0,36,36">
-                    <TextBlock Text="DeleteButtonStyle" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <Button Style="{StaticResource DeleteButtonStyle}" Content="Delete" />
-                        <Button Style="{StaticResource DeleteButtonStyle}" Content="Disabled" IsEnabled="False" />
-                    </StackPanel>
-                    <TextBlock
-                        Text="Hover / press the enabled button to preview the theme-aware states."
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                </StackPanel>
-                                <StackPanel Spacing="12" Margin="0,0,36,36">
-                    <!--
-                        解析器组件自检：确认 parser\ 里的桥 / 核心 / 模板 / CPython 运行时
-                        都被打进了这个包，并且用的是包里的运行时而不是机器上装的 Python。
-                    -->
-                    <Button
-                        x:Name="ParserDiagnoseButton"
-                        Click="ParserDiagnoseButton_Click"
-                        Content="检查解析器组件" />
-
-                    <TextBlock
-                        x:Name="ParserDiagnoseText"
-                        FontFamily="Consolas"
-                        IsTextSelectionEnabled="True"
-                        TextWrapping="Wrap" />
-                </StackPanel>
-            </ScrollView>
         </StackPanel>
     </Grid>
 </Page>

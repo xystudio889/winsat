@@ -191,6 +191,7 @@ public sealed partial class SettingsPage : Page
             DefaultButton = ContentDialogButton.Primary,
             // 对话框不继承窗口内容主题，需显式跟随软件主题
             RequestedTheme = AppTheme.CurrentElementTheme,
+            Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
         }.ShowAsync();
 
         if (result == ContentDialogResult.Primary)
@@ -224,7 +225,8 @@ public sealed partial class SettingsPage : Page
             CloseButtonText = Loader.GetString("Close"),
             Content = new ExportChoose(),
             // 对话框不继承窗口内容主题，需显式跟随软件主题
-            RequestedTheme = AppTheme.CurrentElementTheme
+            RequestedTheme = AppTheme.CurrentElementTheme,
+            Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
         };
 
         await dialog.ShowAsync();
@@ -239,7 +241,8 @@ public sealed partial class SettingsPage : Page
             CloseButtonText = Loader.GetString("Close"),
             Content = new ImportChoose(),
             // 对话框不继承窗口内容主题，需显式跟随软件主题
-            RequestedTheme = AppTheme.CurrentElementTheme
+            RequestedTheme = AppTheme.CurrentElementTheme,
+            Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
         };
 
         await dialog.ShowAsync();
@@ -373,6 +376,7 @@ public sealed partial class SettingsPage : Page
             DefaultButton = ContentDialogButton.Primary,
             // 对话框不继承窗口内容主题，需显式跟随软件主题
             RequestedTheme = AppTheme.CurrentElementTheme,
+            Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
         };
 
         IReadOnlyList<UIElement>? pages = null;
@@ -462,6 +466,7 @@ public sealed partial class SettingsPage : Page
                 CloseButtonText = Loader.GetString("Close"),
                 // 对话框不继承窗口内容主题，需显式跟随软件主题
                 RequestedTheme = AppTheme.CurrentElementTheme,
+                Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
             }.ShowAsync();
         }
         catch (Exception ex)
@@ -480,6 +485,7 @@ public sealed partial class SettingsPage : Page
             CloseButtonText = Loader.GetString("OK"),
             // 对话框不继承窗口内容主题，需显式跟随软件主题
             RequestedTheme = AppTheme.CurrentElementTheme,
+            Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
         }.ShowAsync();
     }
 }

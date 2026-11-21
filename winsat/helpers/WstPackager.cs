@@ -31,8 +31,8 @@ namespace winsat.helpers;
 /// </summary>
 public static class WstPackager
 {
-    private const string MissingFileFormat = "file '{0}' does not exist, skipped";
-    private const string FailedFormat = "failed to write wst package '{0}': {1}";
+    private static readonly string MissingFileFormat = Loader.GetString("MissingFormat");
+    private static readonly string FailedFormat = Loader.GetString("FailedFormat");
 
     /// <summary>把 paths 里的文件/文件夹追加进 outputPath 指向的 wst 包。</summary>
     public static string Export(string outputPath, IEnumerable<string> paths)

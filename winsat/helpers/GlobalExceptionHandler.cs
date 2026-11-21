@@ -108,6 +108,7 @@ namespace winsat.helpers
                     PrimaryButtonText = "Copy",
                     CloseButtonText = "Close",
                     DefaultButton = ContentDialogButton.Close,
+                    Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"]
                 };
 
                 dialog.PrimaryButtonClick += (_, args) =>

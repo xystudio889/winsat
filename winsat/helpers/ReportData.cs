@@ -118,37 +118,27 @@ namespace winsat.helpers
         private static async Task<List<ReportItem>> LoadVisualizationAsync(string filePath)
         {
             // 每次打印都重新取一次语言：打印语言跟随用户打印时的界面语言
-            string symbolPath = Path.Combine(
-                FileHelper.installDir, "Symbols", $"{AppLanguage.SymbolLanguage}.json");
+            // 符号文件在 <安装目录>\parser\Symbols 下（旧布局放安装根目录时 ParserPaths 会自动兜底）
+            string symbolPath = ParserPaths.SymbolFile(AppLanguage.SymbolLanguage);
 
             if (!File.Exists(symbolPath))
             {
                 throw new FileNotFoundException(Loader.GetString("ParserMissing"), symbolPath);
             }
 
-#if DEBUG
-            string parserPath = Path.Combine(FileHelper.installDir, "Commands", "xmlParser.py");
-            if (!File.Exists(parserPath))
+            string output;
+            try
             {
-                throw new FileNotFoundException(Loader.GetString("ParserMissing"), parserPath);
+                // 进程内调 parser.dll，不再起 python 子进程：客户机不需要装 Python。
+                // Task.Run 已在 ParserBridge 里做过，这里 await 不会卡 UI 线程；
+                // 返回的仍是同一套协议行（<line> / <subline> / <spacing> / 键,值 / <error>）。
+                output = await ParserBridge.ParseXmlAsync(filePath, symbolPath);
             }
-
-            string output = await Commands.Execute(
-                "python.exe", $"\"{parserPath}\" \"{filePath}\" \"{symbolPath}\"");
-#else
-            string parserPath = Path.Combine(FileHelper.installDir, "Commands", "xmlParser.exe");
-            if (!File.Exists(parserPath))
+            catch (ParserException ex)
             {
-                throw new FileNotFoundException(Loader.GetString("ParserMissing"), parserPath);
-            }
-
-            string output = await Commands.Execute(
-                $"\"{parserPath}\"", $"\"{filePath}\" \"{symbolPath}\"");
-#endif
-
-            if (output.StartsWith("Error", StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException(output);
+                // 桥或运行时起不来（parser.dll 缺失、python314.dll 缺失、位数不匹配、import 失败……）。
+                // ex.Message 里已经带「缺什么 / 该放哪」的清单，直接给用户看就行。
+                throw new InvalidOperationException($"{Loader.GetString("ParserMissing")}\n{ex.Message}", ex);
             }
 
             var items = new List<ReportItem>();
@@ -219,7 +209,6 @@ namespace winsat.helpers
 
             return items;
         }
-
         /// <summary>按行切开源码；统一成 \n，避免 \r 在 TextBlock 里显示成方块。</summary>
         private static List<string> SplitCodeLines(string xml) =>
             xml.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n').ToList();

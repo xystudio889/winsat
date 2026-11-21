@@ -617,4 +617,10 @@ However, you will not be able to import this file again.</value>
   <data name="cs_GamingGraphicsDesc" xml:space="preserve">
     <value>3D business and gaming graphics performance</value>
   </data>
+  <data name="MissingFormat" xml:space="preserve">
+    <value>File '{0}' does not exist, skipped</value>
+  </data>
+  <data name="FailedFormat" xml:space="preserve">
+    <value>Failed to write wst package '{0}': {1}</value>
+  </data>
 </root>

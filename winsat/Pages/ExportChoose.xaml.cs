@@ -133,7 +133,7 @@ namespace winsat.pages
             }
         }
 
-        /// <summary>
+                /// <summary>
         /// “精简版网页”是否已选中一个真实存在的跑分文件
         /// </summary>
         private bool HasValidReportFile() =>
@@ -505,7 +505,7 @@ namespace winsat.pages
             ReloadFileList(); // 加载完成后按勾选情况刷新“导出”按钮
         }
 
-        private void WebReportExportShow(object sender, RoutedEventArgs e)
+                private void WebReportExportShow(object sender, RoutedEventArgs e)
         {
             SelectExport.Visibility = Visibility.Collapsed;
             WebReportExport.Visibility = Visibility.Visible;
@@ -540,6 +540,31 @@ namespace winsat.pages
         private async void ExportSuccessFileButton_Click(object sender, RoutedEventArgs e)
         {
             await Commands.Execute("explorer.exe", $"/select,\"{openFilePath}\"");
+        }
+
+        /// <summary>
+        /// 取 5 项 WinSAT 分数，顺序沿用原命令行的 cpu/ram/graphics/d3/disk。
+        /// 取不到有效数字（没跑分、取到的是本地化文案）时返回 null ——
+        /// 宁可导出「不带分数表」的 HTML，也不要导出一张 0 分的表。
+        /// </summary>
+        private static async Task<Score?> TryReadScoreAsync()
+        {
+            List<string> values = await ScoreHelper.GetScore();
+            if (values.Count < 5)
+            {
+                return null;
+            }
+
+            double[] numbers = new double[5];
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                if (!double.TryParse(values[i], NumberStyles.Float, CultureInfo.InvariantCulture, out numbers[i]))
+                {
+                    return null;
+                }
+            }
+
+            return new Score(numbers[0], numbers[1], numbers[2], numbers[3], numbers[4]);
         }
 
         /// <summary>
@@ -584,43 +609,33 @@ namespace winsat.pages
 
                 if (result != null)
                 {
-                    var scores = await ScoreHelper.GetScore();
-
-                    string checkState;
-
-                    if (EasyViewCheckbox.IsChecked != null)
+                    // 分数表：勾了「易读视图」才导出；拿不到有效分数就不带分数表（导出照样成功）
+                    Score? score = null;
+                    if (EasyViewCheckbox.IsChecked == true)
                     {
-                        checkState = (bool)EasyViewCheckbox.IsChecked ? "--score" : "";
+                        score = await TryReadScoreAsync();
                     }
-                    else
-                    {
-                        checkState = String.Empty;
-                    }
+
+                    // 上面 FileComboBox 的项是 FileInfo，取全路径
+                    string source = (FileComboBox.SelectedItem as FileInfo)?.FullName ?? string.Empty;
 
                     ControlBar.Visibility = Visibility.Collapsed;
                     BottomBar.Visibility = Visibility.Visible;
                     WorkingBar.Visibility = Visibility.Visible;
                     WorkingRing.IsActive = true;
-#if DEBUG
-                    var cmdlines = await Commands.Execute(
-                        "python.exe",
-                        $"\"{Path.Combine(FileHelper.installDir, "Commands", "xmlParser.py")}\" " +
-                        $"\"{FileComboBox.SelectedValue}\" " +
-                        $"\"{Path.Combine(FileHelper.installDir, "Symbols")}\" " +
-                        $"--html \"{result.Path}\" " +
-                        $"\"{Path.Combine(FileHelper.installDir, "Commands", "templates")}\" " +
-                        string.Join(" ", scores.Take(5)) +
-                        $" {checkState}");
-#else
-                    var cmdlines = await Commands.Execute(
-                        $"\"{Path.Combine(FileHelper.installDir, "Commands", "xmlParser.exe")}\" ",
-                        $"\"{FileComboBox.SelectedValue}\" " +
-                        $"\"{Path.Combine(FileHelper.installDir, "Symbols")}\" " +
-                        $"--html \"{result.Path}\" " +
-                        $"\"{Path.Combine(FileHelper.installDir, "Commands", "templates")}\" " +
-                        string.Join(" ", scores.Take(5)) +
-                        $" {checkState}");
-#endif
+
+                    string cmdlines;
+                    try
+                    {
+                        // 进程内调 parser.dll：跑分 XML + 符号目录 + 输出路径 +（可选）分数表。
+                        // 返回空串 = 成功；否则是 <warning> / <error> 行，下面统一收集。
+                        cmdlines = await ParserBridge.ExportHtmlAsync(
+                            source, ParserPaths.SymbolsDir, result.Path, score);
+                    }
+                    catch (Exception ex)
+                    {
+                        cmdlines = "<error>" + ex.Message.Replace("\r\n", "\\n").Replace("\n", "\\n");
+                    }
 
                     bool showError = CollectProtocolLines(cmdlines, "<error>", out string errMsg);
                     bool showWarning = CollectProtocolLines(cmdlines, "<warning>", out string warnMsg);
@@ -668,30 +683,13 @@ namespace winsat.pages
 
                 if (result != null)
                 {
-                    // wst 模式用不到 source，占位传空串；symbol 只用来读 $locale（警告/错误的文案来源）
-                    string symbolPath = Path.Combine(FileHelper.installDir, "Symbols", $"{AppLanguage.SymbolLanguage}.json");
-                    string fileArgs = string.Join(" ", checkedFiles.Select(file => $"\"{file}\""));
-
                     ControlBar.Visibility = Visibility.Collapsed;
                     WorkingBar.Visibility = Visibility.Visible;
                     WorkingRing.IsActive = true;
 
-#if DEBUG
-                    var cmdlines = await Commands.Execute(
-                        "python.exe",
-                        $"\"{Path.Combine(FileHelper.installDir, "Commands", "xmlParser.py")}\" " +
-                        $"\"a\" " +
-                        $"\"{symbolPath}\" " +
-                        $"--wst \"{result.Path}\" " +
-                        fileArgs);
-#else
-                    var cmdlines = await Commands.Execute(
-                        $"\"{Path.Combine(FileHelper.installDir, "Commands", "xmlParser.exe")}\"",
-                        $"\"a\" " +
-                        $"\"{symbolPath}\" " +
-                        $"--wst \"{result.Path}\" " +
-                        fileArgs);
-#endif
+                    // wst 打包和 Python 无关：C# 直接用 System.IO.Compression 往 zip 里追加，
+                    // 所以这里既不需要解释器，也不需要符号文件（也就没有 $locale 文案）。
+                    string cmdlines = ParserBridge.ExportWst(result.Path, checkedFiles);
 
                     WorkingBar.Visibility = Visibility.Collapsed;
                     WorkingRing.IsActive = false;

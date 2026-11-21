@@ -1,90 +1,146 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>winsat</RootNamespace>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon Condition="Exists('Assets\AppIcon.ico')">Assets\AppIcon.ico</ApplicationIcon>
-    <Platforms>x86;x64;ARM64</Platforms>
-    <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
-    <UseWinUI>true</UseWinUI>
-    <WinUISDKReferences>false</WinUISDKReferences>
-    <EnableMsixTooling>true</EnableMsixTooling>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-	<RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+        <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+        <RootNamespace>winsat</RootNamespace>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon Condition="Exists('Assets\AppIcon.ico')">Assets\AppIcon.ico</ApplicationIcon>
+        <Platforms>x86;x64;ARM64</Platforms>
+        <PublishProfile Condition="Exists('Properties\PublishProfiles\win-$(Platform).pubxml')">win-$(Platform).pubxml</PublishProfile>
+        <UseWinUI>true</UseWinUI>
+        <WinUISDKReferences>false</WinUISDKReferences>
+        <EnableMsixTooling>true</EnableMsixTooling>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="Assets\SplashScreen.scale-200.png" />
+        <Content Include="Assets\LockScreenLogo.scale-200.png" />
+        <Content Include="Assets\Square150x150Logo.scale-200.png" />
+        <Content Include="Assets\Square44x44Logo.scale-200.png" />
+        <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<Content Include="Symbols\**\*.*" />
-		<Content Include="Commands\**\*.*" />
-	</ItemGroup>
+    <!--
+        parser\：解析器的全部运行组件，进 MSIX 包就是靠这一条 Content。
 
-  <ItemGroup>
-    <Manifest Include="$(ApplicationManifest)" />
-  </ItemGroup>
+            parser\parser.dll       Cython 桥（DllImport 目标）
+            parser\xml_parser.pyd   解析核心（机器码，不含源码）
+            parser\templates\       export_html 的 HTML 模板
+            parser\Symbols\         符号文件 en-US.json / zh-Hans-CN.json
+            parser\runtime\         CPython embeddable（python314.dll / .zip / ._pth / Lib）
+                                    + lxml / bs4 / soupsieve
 
-  <!--
+        内容由仓库根目录的 stage_parser.ps1 组装（运行时时用 ConsoleApp1 的
+        bundle_runtime.ps1 生成），改完记得重跑一次再打包。约定与排错见 PARSER.md。
+
+        CopyToOutputDirectory 让 dotnet build 的输出目录也能直接跑（F5 调试看得到），
+        CopyToPublishDirectory 让 dotnet publish 的结果带上它。
+    -->
+    <ItemGroup>
+        <Content Include="parser\**\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
+        <!-- 同一批文件别被默认的 None 项再收一遍 -->
+        <None Remove="parser\**" />
+    </ItemGroup>
+
+    <!--
+        共享桥接代码：winsat 是能单独拷走的独立程序，所以**不引用 ConsoleApp1 的工程/源码**
+        （否则把 winsat 目录拷到别处就报「找不到 ConsoleApp1」）。
+        做法是保留独立副本：权威版本在 ConsoleApp1\，这里的 winsat\helpers\NativeBridge.cs /
+        RuntimeCheck.cs / WstPackager.cs 由仓库根目录的 sync_shared_sources.ps1 生成，
+        命名空间是 winsat.helpers —— 和本项目的其他代码一致，界面里不需要额外 using。
+
+            改桥接逻辑 → 改 ConsoleApp1\*.cs → 重跑 .\sync_shared_sources.ps1
+
+        这三个文件由 SDK 的默认 **/*.cs 收集，不需要在这里再写 <Compile Include>。
+    -->
+
+    <ItemGroup>
+	    <Content Include="Symbols\**\*.*" />
+	    <Content Include="Commands\**\*.*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Styles\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Manifest Include="$(ApplicationManifest)" />
+    </ItemGroup>
+
+    <!--
     Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
     Tools extension to be activated for this project even if the Windows App SDK Nuget
     package has not yet been restored.
-  -->
-  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <ProjectCapability Include="Msix" />
-  </ItemGroup>
+    -->
+    <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+        <ProjectCapability Include="Msix" />
+    </ItemGroup>
 
-  <!--
+    <!--
     Microsoft.Windows.SDK.BuildTools.WinApp adds first-class support for
     `dotnet run` on packaged WinUI apps: it hooks the .NET CLI Run target to
     register a debug identity via the winapp CLI and launch the app with
     package identity (AUMID).
     Set <EnableWinAppRunSupport>false</EnableWinAppRunSupport> in a
     <PropertyGroup> above to opt out.
-  -->
-  <ItemGroup>
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="*" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="*" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="*" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Styles\" />
-  </ItemGroup>
+    -->
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="*" />
+        <PackageReference Include="Microsoft.WindowsAppSDK" Version="*" />
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools.WinApp" Version="*" />
+    </ItemGroup>
 
-  <!--
+    <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
     Explorer "Package and Publish" context menu entry to be enabled for this project even if
     the Windows App SDK Nuget package has not yet been restored.
-  -->
-  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
-  </PropertyGroup>
+    -->
+    <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+        <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+    </PropertyGroup>
 
-  <!-- Publish Properties -->
-  <PropertyGroup>
-	<Version>2.2.0</Version>
-	<AssemblyVersion>$(Version).897</AssemblyVersion>
-	<AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-	<PublishTrimmed>false</PublishTrimmed>
-    <GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
-    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
-    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
-    <GenerateTestArtifacts>False</GenerateTestArtifacts>
-    <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
-    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-  </PropertyGroup>
+    <!-- Publish Properties -->
+    <PropertyGroup>
+        <Version>2.2.0</Version>
+        <AssemblyVersion>$(Version).907</AssemblyVersion>
+        <AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
+        <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+        <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+        <PublishTrimmed>false</PublishTrimmed>
+        <GenerateTemporaryStoreCertificate>True</GenerateTemporaryStoreCertificate>
+        <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+        <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+        <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+        <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+        <GenerateTestArtifacts>True</GenerateTestArtifacts>
+        <AppxBundle>Always</AppxBundle>
+        <AppxBundlePlatforms>x64|arm64</AppxBundlePlatforms>
+        <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+    </PropertyGroup>
+    <!--
+        parser\ 里的 parser.dll / xml_parser.pyd 是用 x64 的 CPython 3.14 编的，
+        只有 x64 进程能加载。项目本身还会编译 x86 / ARM64，那两个平台上点「友好视图」
+        会抛 BadImageFormatException，所以提前在构建日志里说清楚。
+
+        真要出 ARM64 包：pyd 得在 arm64 机器上用 arm64 的 Python 3.14 重编，
+        然后换掉 parser\parser.dll、parser\xml_parser.pyd 和 parser\runtime\。
+    -->
+    <Target Name="WarnParserPayloadPlatform" BeforeTargets="Build"
+            Condition="'$(Platform)' == 'x86' or '$(Platform)' == 'ARM64' or '$(Platform)' == 'arm64'">
+        <Warning Text="parser\ 里的 parser.dll / xml_parser.pyd 是 x64 版本（当前 Platform=$(Platform)），运行时会加载失败；打 ARM64/x86 包前需要重新编译这两个 .pyd。" />
+    </Target>
+
+    <!-- parser\ 还没组装时给一句能照着敲的命令，别等运行时报 DllNotFoundException -->
+    <Target Name="WarnMissingParserPayload" BeforeTargets="Build"
+            Condition="!Exists('$(MSBuildProjectDirectory)\parser\parser.dll')">
+        <Warning Text="winsat\parser\parser.dll 不存在：先执行仓库根目录的 .\stage_parser.ps1 组装解析器组件（否则应用启动后无法分析跑分）。" />
+    </Target>
 </Project>

@@ -452,31 +452,31 @@ namespace winsat.pages
                         bool isBarError = false;
                         bool notLoad = false;
 
-                        var symbolPath = IoPath.Combine(FileHelper.installDir, "Symbols", $"{topUserLanguage}.json");
-#if DEBUG
-                        var parserPath = IoPath.Combine(FileHelper.installDir, "Commands", "xmlparser.py");
-                        var command = "python";
-                        var args = $"\"{parserPath}\" \"{selectedFile.FullName}\" \"{symbolPath}\" ";
-#else
-                        var parserPath = IoPath.Combine(FileHelper.installDir, "Commands", "xmlparser.exe");
-                        var command = parserPath;
-                        var args = $"\"{selectedFile.FullName}\" \"{symbolPath}\" ";
-#endif
+                        // 符号文件现在在 <安装目录>\parser\Symbols 下
+                        var symbolPath = ParserPaths.SymbolFile(topUserLanguage);
+                        string lines = string.Empty;
 
-                        if ((!File.Exists(parserPath)) || (!File.Exists(symbolPath)))
+                        if (!File.Exists(symbolPath))
                         {
                             isBarError = true;
                             LoadingSignalErrorBar.Message += Loader.GetString("ParserMissing") + "\n";
                             notLoad = true;
                         }
-
-                        string lines = (await Commands.Execute(command, args));
-
-                        if (lines.StartsWith("Error"))
+                        else
                         {
-                            isBarError = true;
-                            LoadingSignalErrorBar.Message += $"{lines}\n";
-                            notLoad = true;
+                            try
+                            {
+                                // 进程内调 parser.dll（不再起 python 子进程）：客户机不需要装 Python。
+                                // 解析在 Task.Run 里跑，UI 线程不卡；返回的仍是同一套协议行。
+                                lines = await ParserBridge.ParseXmlAsync(selectedFile.FullName, symbolPath);
+                            }
+                            catch (Exception ex)
+                            {
+                                // <see cref="ParserException"/> 的消息已经包含「缺什么 / 该放哪」
+                                isBarError = true;
+                                LoadingSignalErrorBar.Message += $"{Loader.GetString("ParserMissing")}\n{ex.Message}\n";
+                                notLoad = true;
+                            }
                         }
 
                         foreach (string line in lines.Split("\n"))

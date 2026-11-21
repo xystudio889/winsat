@@ -1,0 +1,116 @@
+<Project>
+  <!--
+    ============================================================================
+    Python 运行时打包目标（可与任意 .NET 项目共用：WPF / WinForms / WinUI 3）
+    ============================================================================
+
+    作用：把「C# 调 Python」需要的所有东西搬进构建输出 / 发布目录，让产物
+    目录本身就是一个能直接拷给客户机的完整程序。
+
+    搬两类东西：
+      1. 我们自己的产物（$(PythonNativeDir)）：
+           parser.dll        Cython 桥接层，DllImport("parser.dll") 加载
+           xml_parser.pyd    解析核心（编译形态，发布不带源码）
+           xml_parser.py     解析核心（源码形态，只在 core=copy 开发期出现）
+      2. 随程序分发的 CPython 运行时（$(PythonRuntimeDir)，由
+         bundle_runtime.ps1 -StageOnly 组装）：
+           python314.dll / python314.zip / python314._pth / *.pyd / Lib\site-packages\...
+
+    为什么运行时也要靠 MSBuild 搬，而不是让脚本自己往 publish 里拷：
+      * 发布目录的内容只有一个出处（csproj/targets），不会出现「脚本拷了、
+        MSBuild 没拷」的不一致；
+      * WinUI 3 的 MSIX 打包只认项目里的 Content 项 —— 脚本拷进去的文件
+        不会进 msix。走 MSBuild，桌面 exe 和 MSIX 是同一套配置；
+      * dotnet build（F5 调试）和 dotnet publish 都自动生效。
+
+    用法（项目文件里只需要一行 Import）：
+        <Import Project="python\PythonRuntime.targets" />
+      可选覆盖：PythonRuntimeDir / PythonNativeDir / PythonTemplateDir。
+
+    运行时目录不存在时不报错（开发机上直接跑 dotnet build 是常态，只要 PATH
+    里有 Python 就能跑）；打包给客户机前先执行：
+        .\bundle_runtime.ps1 -StageOnly
+  -->
+
+  <PropertyGroup>
+    <PythonNativeDir Condition="'$(PythonNativeDir)' == ''">$(MSBuildProjectDirectory)\python</PythonNativeDir>
+    <PythonRuntimeDir Condition="'$(PythonRuntimeDir)' == ''">$(PythonNativeDir)\runtime</PythonRuntimeDir>
+    <PythonTemplateDir Condition="'$(PythonTemplateDir)' == ''">$(MSBuildProjectDirectory)\examples\templates</PythonTemplateDir>
+
+    <!-- 核心用哪种形态：以 python\ 目录里实际存在的文件为准（只认一种，见 build_bridge.py） -->
+    <PythonCoreCompiled Condition="'$(PythonCoreCompiled)' == '' and Exists('$(PythonNativeDir)\xml_parser.pyd')">true</PythonCoreCompiled>
+    <PythonCoreCompiled Condition="'$(PythonCoreCompiled)' == ''">false</PythonCoreCompiled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="$(PythonNativeDir)\parser.dll"
+             Condition="Exists('$(PythonNativeDir)\parser.dll')"
+             Link="parser.dll"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+
+    <Content Include="$(PythonNativeDir)\xml_parser.pyd"
+             Condition="'$(PythonCoreCompiled)' == 'true' and Exists('$(PythonNativeDir)\xml_parser.pyd')"
+             Link="xml_parser.pyd"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+
+    <Content Include="$(PythonNativeDir)\xml_parser.py"
+             Condition="'$(PythonCoreCompiled)' != 'true' and Exists('$(PythonNativeDir)\xml_parser.py')"
+             Link="xml_parser.py"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+
+    <!-- 模板保持 templates\ 的目录结构（xml_parser 按模块旁边的 templates 找） -->
+    <Content Include="$(PythonTemplateDir)\**\*.html"
+             Condition="Exists('$(PythonTemplateDir)')"
+             Link="templates\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+
+    <!-- 运行时原样铺到输出根目录：python314.dll 必须和 exe 同一层，否则加载不到 -->
+    <Content Include="$(PythonRuntimeDir)\**\*"
+             Condition="Exists('$(PythonRuntimeDir)')"
+             Link="%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- 缺东西时给出「照着敲就行」的命令，而不是等运行时抛 DllNotFoundException -->
+  <Target Name="WarnMissingPythonArtifacts" BeforeTargets="Build">
+    <Warning Condition="!Exists('$(PythonNativeDir)\parser.dll')"
+             Text="没找到 $(PythonNativeDir)\parser.dll，请先运行：python python\build_bridge.py（或 .\build.ps1）" />
+
+    <Warning Condition="!Exists('$(PythonNativeDir)\xml_parser.pyd') and !Exists('$(PythonNativeDir)\xml_parser.py')"
+             Text="没找到解析核心 xml_parser.pyd / xml_parser.py，请先运行：python python\build_bridge.py" />
+
+    <Message Condition="!Exists('$(PythonRuntimeDir)')"
+             Importance="high"
+             Text="提示：没有 Python 运行时目录 $(PythonRuntimeDir)（开发机可忽略，靠 PATH 里的 Python 跑）；发布给客户机前执行 .\bundle_runtime.ps1 -StageOnly" />
+
+    <Message Condition="Exists('$(PythonNativeDir)\xml_parser.py') and !Exists('$(PythonNativeDir)\xml_parser.pyd')"
+             Importance="high"
+             Text="注意：当前是开发形态（xml_parser.py 会随程序分发）。发布前重跑 python python\build_bridge.py 编出 xml_parser.pyd。" />
+  </Target>
+
+  <!-- 只有 dotnet publish 才提醒运行时缺失：dotnet build 缺它是正常的 -->
+  <Target Name="WarnMissingPythonRuntimeOnPublish" AfterTargets="Publish">
+    <Warning Condition="!Exists('$(PythonRuntimeDir)')"
+             Text="发布目录里没有 Python 运行时：目标机若没装 Python 就会启动失败。先执行 .\bundle_runtime.ps1 -StageOnly 再 publish。" />
+    <Warning Condition="Exists('$(PythonNativeDir)\xml_parser.py') and !Exists('$(PythonNativeDir)\xml_parser.pyd')"
+             Text="发布目录里带的是 xml_parser.py 源码形态，客户机会看到源码。发布前执行 python python\build_bridge.py 编出 xml_parser.pyd。" />
+  </Target>
+
+  <!--
+    可选：把「编 Python」也挂进 dotnet build（默认关闭）。
+    打开后 F5 之前会自动重编 parser.dll / xml_parser.pyd —— 代价是每次构建
+    都要起一次 MSVC，且构建机必须装 Python + Cython + lxml。
+        dotnet build -p:BuildPythonBridge=true
+  -->
+  <Target Name="BuildPythonBridge" BeforeTargets="BeforeBuild"
+          Condition="'$(BuildPythonBridge)' == 'true'">
+    <Exec Command="python &quot;$(PythonNativeDir)\build_bridge.py&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="normal" />
+  </Target>
+</Project>

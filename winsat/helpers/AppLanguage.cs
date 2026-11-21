@@ -130,7 +130,7 @@ namespace winsat.helpers
             }
         }
 
-        private static string GetSymbolPath(string language) =>
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Symbols", $"{language}.json");
+        /// <summary>符号文件现在收在 &lt;安装目录&gt;\parser\Symbols 下（见 <see cref="ParserPaths"/>）。</summary>
+        private static string GetSymbolPath(string language) => ParserPaths.SymbolFile(language);
     }
 }
